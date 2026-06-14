@@ -1,24 +1,25 @@
 # LifeRecompiled
 
-LifeRecompiled is a portfolio-grade full-stack web app that started as a simple "blog app" and evolved into a small developer/community platform.
+**LifeRecompiled** is a production-style **React/Firebase engineering case study** built around a community/blog app surface.
 
-Users can create posts, join discussions, react to content, save posts, manage their own content, and interact inside a small community-style platform with moderation, profile, and dashboard features.
+It started as a simple blog app and evolved into a full-stack study project focused on practical Firebase architecture, authentication, Firestore data modeling, Cloud Functions, security rules, resilient UI flows, and real-world edge cases.
+
+The goal of the project is not to present a social network or startup product with user traction. The community/blog surface exists so the app can demonstrate realistic product flows while the main value is the engineering work behind them.
+
+---
 
 ## TL;DR
 
-- Community-style posts, comments, reactions, saved posts, profiles, and moderation
-- Backend-authoritative aggregates via Cloud Functions v2
-- Deterministic reactions + idempotency ledger to prevent counter drift
-- Soft delete + scheduled purge workflow (Trash -> permanent delete)
-- Staging vs production discipline for safer deploys
+LifeRecompiled demonstrates:
 
-The project focuses on **production-like engineering problems**:
-
-- Data integrity under retries and race conditions
-- Role-based access control (user vs admin)
-- Backend-authoritative aggregates (counts, badges, stats)
-- Robust pagination + UI-safe normalization
-- Polished UX (undo flows, skeletons, modals, responsive layout)
+- community-style posts, comments, reactions, saved posts, profiles, dashboard, and moderation surfaces
+- Firebase Auth with protected routes, email verification, and role-aware UI
+- Firestore data modeling with public content, private saved-post subcollections, reports, and internal correctness collections
+- Cloud Functions v2 for reaction aggregates, badges, stats, privileged deletion, comment creation, and scheduled cleanup
+- deterministic reaction documents plus idempotency markers and a reaction ledger to reduce counter drift
+- soft delete, Trash restore, permanent cascade delete, and scheduled purge
+- resilient UX patterns such as ghost saved cards, Undo rollback, skeletons, modals, mobile comments sheet, and stable toast IDs
+- practical security-rule boundaries and honest MVP limitations
 
 ---
 
@@ -27,355 +28,554 @@ The project focuses on **production-like engineering problems**:
 - Live: [liferecompiled.com](https://liferecompiled.com)
 - Repository: [GitHub](https://github.com/cole92/liferecompiled)
 - Public About page: `/about`
-- Support & feedback: `/report` (auth-only)
-
----
-
-## Table of contents
-
-- [Tech stack](#tech-stack)
-- [Key product features](#key-product-features)
-- [Architecture at a glance](#architecture-at-a-glance)
-- [Key engineering decisions](#key-engineering-decisions)
-- [Data model (high level)](#data-model-high-level)
-- [Cloud Functions v2](#cloud-functions-v2)
-- [Backend correctness highlights](#backend-correctness-highlights)
-- [Firestore security rules (key policies)](#firestore-security-rules-key-policies)
-- [UX engineering highlights](#ux-engineering-highlights)
-- [CI / Code quality](#ci--code-quality)
-- [Local development](#local-development)
-- [Deploy notes](#deploy-notes)
-- [Operations](#operations)
-- [Testing](#testing)
-- [Gotchas / Lessons learned](#gotchas--lessons-learned)
-- [Roadmap](#roadmap)
-- [Screenshots](#screenshots)
-- [Author](#author)
+- Support & feedback route: `/report` — auth-only
 
 ---
 
 ## Screenshots
 
 ### Desktop dashboard
+
 ![LifeRecompiled desktop dashboard](docs/screenshots/desktop-dashboard.png)
 
 ### Mobile feed
+
 ![LifeRecompiled mobile feed](docs/screenshots/mobile-feed.png)
 
 ### Mobile post details
+
 ![LifeRecompiled mobile post details](docs/screenshots/mobile-post-details.png)
 
 ### Desktop filters
+
 ![LifeRecompiled desktop filters](docs/screenshots/desktop-filters.png)
+
+---
+
+## Table of contents
+
+- [Why this project exists](#why-this-project-exists)
+- [Tech stack](#tech-stack)
+- [Core product surface](#core-product-surface)
+- [Architecture at a glance](#architecture-at-a-glance)
+- [Frontend architecture](#frontend-architecture)
+- [Data model](#data-model)
+- [Cloud Functions v2](#cloud-functions-v2)
+- [Backend correctness highlights](#backend-correctness-highlights)
+- [Firestore security rules model](#firestore-security-rules-model)
+- [UX engineering highlights](#ux-engineering-highlights)
+- [Known limitations and honest caveats](#known-limitations-and-honest-caveats)
+- [Local development](#local-development)
+- [Deployment notes](#deployment-notes)
+- [Testing and CI](#testing-and-ci)
+- [Engineering notes / lessons learned](#engineering-notes--lessons-learned)
+- [Roadmap](#roadmap)
+- [Author](#author)
+
+---
+
+## Why this project exists
+
+LifeRecompiled was built as a long-form learning and portfolio project.
+
+The app uses a familiar community/blog product surface, but the project is mainly an engineering case study. It was built to explore and practice:
+
+- Firebase Auth and app-level auth state
+- protected routes and role-aware UI
+- Firestore data modeling
+- Firestore security rules
+- Cloud Functions v2
+- callable functions vs direct client writes
+- Firestore trigger retries and idempotency
+- backend-maintained aggregates
+- soft delete vs hard delete lifecycles
+- moderation/reporting workflows
+- resilient client-side joins
+- pagination and query constraints
+- practical UX states in a real app
+
+A good way to describe the project:
+
+```text
+A production-style React/Firebase engineering case study with a community/blog app surface.
+```
 
 ---
 
 ## Tech stack
 
-**Frontend**
+### Frontend
 
 - React + Vite
-- React Router v6 (protected routes)
-- Tailwind CSS (dark-first design system)
-- Framer Motion (micro-interactions)
-- react-toastify (centralized toasts + anti-spam)
-- react-tooltip v5 (tooltips)
-- Recharts + dayjs (stats charts + date formatting)
-- Optional: react-dnd for tag reorder
+- React Router
+- Tailwind CSS
+- Framer Motion
+- Firebase Web SDK
+- react-toastify
+- react-tooltip
+- Recharts
+- dayjs
+- Cloudinary unsigned client upload flow
 
-**Backend / Cloud**
+### Backend / platform
 
 - Firebase Auth
 - Firestore
 - Firebase Hosting
-- Cloud Functions v2 (Node 18 runtime)
-- Cloudinary (image upload + best-effort cleanup on delete)
+- Cloud Functions v2
+- Cloudinary image hosting and best-effort cleanup
+- GitHub Actions CI
+
+### Runtime notes
+
+- App development uses the root `.nvmrc`
+- Cloud Functions use `functions/.nvmrc` and `functions/package.json`
+- Cloud Functions runtime: Node 20
+- Cloud Functions region: `europe-central2`
 
 ---
 
-## Key product features
+## Core product surface
 
-### Auth & access control
+### Auth and access control
 
-- Email/password auth: Register, Login, Forgot password (privacy-safe reset messaging)
-- Email verification gate via global AuthProvider guard
-- Session-safe verify flow with timeout-protected reload and anti-spam toasts
-- Protected dashboard routes and admin-only moderation access
+- Email/password registration and login
+- Forgot password flow with neutral reset messaging
+- Email verification gate through global auth state
+- Protected dashboard/account routes
+- Auth-aware action guards for comments, reactions, saves, reports, and dashboard access
+- Admin role derived from user profile data
 
-### Feed (Home)
+### Feed and posts
 
-- Global feed with **cursor pagination** (`startAfter`) and configurable page size
-- Sort modes: Newest / Oldest / Trending
-- Trending sort uses query-based filtering: `badges.trending == true` + stable ordering by `lastHotAt desc, createdAt desc`
-- Category filtering with sort constraints
-- Skeleton loading + clear end-of-list messaging
-
-### Posts
-
-- Create post with title, optional description, content, category, and tags
-- Tags: max 5, each up to 20 chars, validated against a restricted character set
-- Edit window limited to the first **7 days** after creation
-- Manual archive mode makes posts visibly read-only
-- Trash flow with restore window and Firestore-backed TTL filter queries
+- Public feed with cursor pagination
+- Sort modes: Newest, Oldest, Trending
+- Category filtering with Firestore query constraints
+- Post normalization before rendering
+- Author enrichment with safe fallback UI
+- Create/edit post flow
+- Curated tag picker with a maximum of 5 tags
+- My Posts management surface with server-side title-prefix search
+- Edit-window and archived/read-only behavior in the UI
 
 ### Comments
 
-- Comment authors can edit for **10 minutes** after posting
-- Threaded replies with multi-level nesting
-- Soft delete replaces content with a placeholder
-- Comment likes + “people who liked this” modal
-- Progressive loading with compact preview states
-- Mobile-first comments UX using a sheet pattern
+- Realtime comment threads
+- Nested replies using parent references
+- Soft delete flow
+- Comment edit UI
+- Comment likes and likes modal
+- Report flow for comments
+- Mobile-first comments sheet
+- Controlled/subscribed comment rendering for reuse across surfaces
+
+### Reactions and badges
+
+- Deterministic reaction document IDs
+- Transaction-based client reaction toggles
+- Cloud Functions-maintained reaction counts
+- Badge logic for trending / most inspiring / top contributor style states
+- Self-powerup backend rejection
+- Session-throttled reaction help toasts
 
 ### Saved posts
 
-- Save/unsave with **Undo** using a deferred write flow
-- Robust join strategy via `Promise.allSettled`
-- Ghost saved cards when the source post is missing or unavailable
-- Snapshot metadata at save time, including “Updated since saved” support
+- Private saved-post subcollection per user
+- Snapshot metadata captured at save time
+- Saved list pagination
+- Resilient `Promise.allSettled` joins
+- Ghost cards when the original post is missing or unavailable
+- Optimistic unsave with timed Undo and rollback
+- Visible feed save-state chunking for Firestore `in` query limits
 
-### Dashboard & profiles
+### Dashboard and profiles
 
-- Backend-powered dashboard stats from `userStats/{uid}`
-- Monthly activity chart + Trash action ratios
-- Server-side title search for My Posts
-- Public profile pages with top posts, engagement stats, and zoomable avatars
-- Settings flow for name, bio, and profile image upload/repositioning
+- Protected dashboard route area
+- My Posts
+- Saved Posts
+- Stats
+- Trash
+- Create/Edit
+- Settings
+- Admin moderation surface
+- Public profile pages
+- Profile stats and top posts
+- Avatar upload, zoom, and crop/reposition behavior
 
-### Moderation & support
+### Moderation and support
 
-- Admin moderation dashboard with report review and deep links to targets
-- Admin actions: hard delete post cascade, soft delete comments
+- User-created reports for posts/comments
+- Admin report list and target navigation
+- Admin hard-delete path from post details
 - Auth-only support/feedback route at `/report`
-- Multiple report categories + optional reproduction steps + debug context helpers
+- Support route builds email/mailto/clipboard payloads with debug context
+
+Moderation is intentionally MVP-light. It is not a full moderation operations system with statuses, assignments, audit logs, or resolved queues.
 
 ---
 
 ## Architecture at a glance
 
-**Client (React + Vite)**
+### Client
 
-- Reads posts, comments, profiles, and saved lists with cursor pagination
-- Writes only safe, user-owned data
-- Uses deterministic IDs for reaction toggles
+The React app handles:
 
-**Platform services**
+- screen routing
+- auth-aware route protection
+- UI state
+- Firestore reads
+- safe user-owned writes
+- reaction toggle document writes
+- optimistic UI flows
+- dashboard state
+- responsive/mobile surfaces
 
-- **Firebase Auth** for authentication and verification state
-- **Firestore** for canonical app data
-- **Cloud Functions v2** for aggregates, badge logic, cleanup, and privileged mutations
-- **Cloudinary** for image hosting and best-effort asset cleanup
-- **Firebase Hosting** for deployment and custom domain delivery
+### Firebase platform
 
-### Realtime sync model (selected)
+Firebase provides:
 
-- Posts: subscribe or refetch the single `posts/{postId}` doc for `reactionCounts`, `badges`, and archived/read-only state
-- Comments: real-time thread updates via `onSnapshot` over `comments` for a post
-- Reactions: deterministic doc IDs allow single-doc checks (`getDoc` / optional single-doc `onSnapshot`) without listing the reactions collection
+- identity through Firebase Auth
+- app data through Firestore
+- trusted backend logic through Cloud Functions
+- static hosting through Firebase Hosting
+- rules/indexes configuration through tracked Firebase files
+
+### Cloud Functions
+
+Cloud Functions handle:
+
+- reaction aggregate maintenance
+- badge updates
+- user stats updates
+- privileged cascade deletes
+- scheduled Trash purge
+- scheduled trending expiry
+- comment creation validation/rate limiting
+- comment soft delete
+- best-effort Cloudinary cleanup
+
+### Realtime sync model
+
+Selected realtime behavior:
+
+- comments update through `onSnapshot`
+- dashboard Trash count updates through realtime subscription
+- post detail surfaces can reflect updated reaction/badge state
+- reactions use deterministic docs so active state can be checked without listing all reactions
 
 ---
 
-## Key engineering decisions
+## Frontend architecture
 
-- Reaction counts are **backend-authoritative** and maintained by Cloud Functions rather than trusted client writes
-- Reaction documents use **deterministic IDs** to simplify toggles and prevent duplicate state
-- **Idempotency markers** and a **reaction ledger** prevent counter drift during retries or out-of-order events
-- `userStats` is **server-owned** and read-only to clients
-- Internal correctness collections are fully blocked from client access
-- Trash and purge flows are separated to make deletion safer and more recoverable
+The frontend is organized around practical separation:
+
+- `src/pages` — route-level screens
+- `src/components` — reusable UI and feature components
+- `src/services` — Firestore/service calls
+- `src/queries` — Firestore query builders
+- `src/mappers` — Firestore document normalization
+- `src/context` — auth/search state
+- `src/hooks` — shared React hooks
+- `src/utils` — reusable helpers
+- `src/constants` — shared app constants
+
+Important frontend patterns:
+
+- AuthProvider wraps Firebase auth state into app-level state
+- ProtectedRoute gates account-only routes
+- DashboardLayout owns shared dashboard state and passes it through Outlet context
+- query builders keep Firestore query constraints away from components
+- mappers normalize unsafe Firestore data before rendering
+- services isolate reads/writes and author enrichment
+- UI fallbacks prevent one missing document from breaking an entire screen
+- cursor pagination uses explicit page boundaries
+- toast utilities centralize and de-dupe user feedback
+
+This is not an enterprise architecture, but it is structured enough to show real separation of concerns in a portfolio-scale app.
 
 ---
 
-## Data model (high level)
+## Data model
 
-> Names may evolve, but the core split is stable.
+High-level Firestore model:
 
 - `posts/{postId}`
-  - content fields, `deleted`, `archived`, tags, category
-  - `reactionCounts: { idea, hot, powerup }` (backend-authoritative)
-  - `badges` + `lastHotAt` for trending expiry
+  - content fields
+  - author/user reference
+  - category/tags
+  - deleted/archived state
+  - reaction counts
+  - badge state
+  - `lastHotAt` for trending expiry
+
 - `comments/{commentId}`
-  - `postId`, `parentId` (threading), `deleted`, timestamps
+  - post reference
+  - author reference
+  - optional parent reference for replies
+  - content
+  - timestamps
+  - soft-delete state
+  - likes
+
 - `users/{uid}`
-  - profile fields + `role` + public `badges`
-- `userStats/{uid}`
-  - server-owned aggregates (CF-only writes)
-  - used by Dashboard Stats (monthly activity + restore/delete counters)
-- `reactions/{postId__uid__type}`
-  - deterministic toggle docs (no list/query)
-- `reactionLedger/{reactionId}` + `processedEvents/{type__eventId}`
-  - internal correctness collections (deny all client access)
+  - public profile fields
+  - role
+  - public badge mirror
+
 - `users/{uid}/savedPosts/{postId}`
-  - `savedAt` + snapshot metadata (`postTitleAtSave`, `postUpdatedAtAtSave`)
+  - saved timestamp
+  - snapshot metadata
+  - source post reference data used by the Saved Posts UI
+
+- `reactions/{postId__uid__type}`
+  - deterministic reaction toggle document
+
+- `userStats/{uid}`
+  - dashboard/user statistics
+  - maintained by backend logic
+
 - `reports/{compositeReportId}`
-  - user create / admin review
+  - user-created report documents
+  - admin-readable
+
+- `processedEvents/{type__eventId}`
+  - internal idempotency markers
+
+- `reactionLedger/{reactionId}`
+  - internal reaction count pairing state
+
+- `appSettings/reactionThresholds`
+  - configurable/fallback reaction thresholds
+
+Note: some legacy field names exist in parts of the codebase, especially around comments (`postID`, `parentID`, `userID`). Those are historical implementation details and should be considered when refactoring or documenting the model further.
 
 ---
 
 ## Cloud Functions v2
 
 **Region:** `europe-central2`  
-**Runtime:** Node 18  
-**Patterns:** idempotency markers (`processedEvents`) + per-reaction ledger (`reactionLedger`) + stale guards
+**Runtime:** Node 20  
+**Main patterns:** callable functions, Firestore triggers, schedulers, idempotency markers, reaction ledger, stale-event guards
 
-### Inventory
-
-| Function                                  | Trigger / type                      | What it does                                                | Touches                                                         |
-| ----------------------------------------- | ----------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------- |
-| `ping`                                    | HTTP `onRequest`                    | Healthcheck (`pong`)                                        | -                                                               |
-| `deletePostCascade`                       | Callable `onCall`                   | Hard delete cascade (author/admin) + Cloudinary best-effort | posts, comments, reactions, userStats, cloudinary               |
-| `deleteCommentAndChildren`                | Callable `onCall`                   | Hard delete comment subtree (batched)                       | comments                                                        |
-| `softDeleteComment`                       | Callable `onCall`                   | Soft delete comment (author/admin)                          | comments                                                        |
-| `addCommentSecure`                        | Callable `onCall`                   | Create comment + rate limit + validation                    | comments                                                        |
-| `updateUserStatsOnPostCreateV2`           | Firestore `onCreate posts/{postId}` | Increment author stats (monthly + total)                    | posts, userStats, processedEvents                               |
-| `bumpRestoredOnPostUpdate`                | Firestore `onUpdate posts/{postId}` | Detect restore and bump stats                               | posts, userStats, processedEvents                               |
-| `cleanupExpiredPostsV2`                   | Scheduler (daily)                   | Purge Trash posts older than 30d (cascade)                  | posts, comments, reactions, userStats, cloudinary               |
-| `expireTrendingPostsV2`                   | Scheduler (daily)                   | Expire trending by `lastHotAt` (>7d)                        | posts                                                           |
-| `reactionsIdeaOnCreateV2 / OnDeleteV2`    | Firestore triggers                  | Maintain `idea` counts + Most Inspiring badge               | reactions, posts, thresholds, ledger, markers                   |
-| `reactionsHotOnCreateV2 / OnDeleteV2`     | Firestore triggers                  | Maintain `hot` counts + trending badge + `lastHotAt`        | reactions, posts, thresholds, ledger, markers                   |
-| `reactionsPowerupOnCreateV2 / OnDeleteV2` | Firestore triggers                  | Maintain `powerup` counts + Top Contributor latch           | reactions, posts, userStats, users, thresholds, ledger, markers |
+| Function | Trigger / type | Purpose |
+| --- | --- | --- |
+| `ping` | HTTP `onRequest` | Healthcheck |
+| `addCommentSecure` | Callable `onCall` | Create comment with validation/rate-limit behavior |
+| `softDeleteComment` | Callable `onCall` | Soft delete a comment as author/admin |
+| `deleteCommentAndChildren` | Callable `onCall` | Hard delete a comment subtree |
+| `deletePostCascade` | Callable `onCall` | Hard delete a post and related data as author/admin |
+| `updateUserStatsOnPostCreateV2` | Firestore `onCreate` | Update author stats when posts are created |
+| `bumpRestoredOnPostUpdate` | Firestore `onUpdate` | Detect restored posts and update stats |
+| `cleanupExpiredPostsV2` | Scheduled | Purge Trash posts older than retention window |
+| `expireTrendingPostsV2` | Scheduled | Expire stale trending badges |
+| `reactionsIdeaOnCreateV2 / OnDeleteV2` | Firestore triggers | Maintain IDEA reaction counts and badge state |
+| `reactionsHotOnCreateV2 / OnDeleteV2` | Firestore triggers | Maintain HOT reaction counts, trending badge, and `lastHotAt` |
+| `reactionsPowerupOnCreateV2 / OnDeleteV2` | Firestore triggers | Maintain POWERUP counts, stats, and top-contributor style badge state |
 
 ---
 
 ## Backend correctness highlights
 
-### 1) Deterministic reaction toggles (client contract)
+### 1. Deterministic reaction toggles
 
-Reaction doc id: `postId__uid__reactionType`
+Reaction document ID:
 
-Client can only:
+```text
+postId__uid__reactionType
+```
 
-- `get` (check active)
-- `create` (toggle on)
-- `delete` (toggle off)
+This gives each user one reaction document per post/type and makes active-state checks simple.
 
-Client cannot:
-
-- `list` reactions
-- `update` reactions
-
-This reduces spam vectors and keeps the model simple.
-
-### 2) Reactions: idempotency + stale guards + ledger pairing
-
-Cloud Functions handle out-of-order events and retries.
-
-Problems handled:
-
-- stale create (create arrives after delete)
-- stale delete (delete arrives after re-create)
-- orphan delete (decrement without prior increment -> drift)
-
-Final approach:
-
-- Idempotency markers keyed by `event.id` (`processedEvents/{type__eventId}`)
-- Stale guards:
-  - onCreate verifies doc still exists
-  - onDelete verifies doc not recreated
-- Ledger pairing:
-  - `reactionLedger/{reactionId}.active` determines whether an increment was actually applied
-  - decrement only happens if ledger says it was counted
-- All decrements clamp counters to `>= 0`
-
-### 3) Trending badge: count rule + time expiry
-
-- Count rule: HOT reaction count crosses threshold -> `badges.trending = true`
-- Time rule: daily scheduler expires trending if `lastHotAt < now - 7 days` (or missing for legacy edge cases)
-
-### 4) Powerup: Top Contributor latch
-
-- Powerup increments post + author stats
-- Self-powerup is rejected
-- Top Contributor is **latched** when threshold is crossed (badge remains true even if counts later decrease)
-- Badge is mirrored into `users/{uid}` for public UI
-
-### 5) Cascade hard delete (callable)
-
-Callable: `deletePostCascade`
-
-- allowed: post author OR admin
-- deletes in order:
-  1. reactions
-  2. comments
-  3. post
-- best-effort Cloudinary asset destroy (if `imagePublicId` exists)
-- stats bump applies to the **authorId** (not requestor)
-
-### 6) Comment deletion permissions
-
-Callable: `softDeleteComment`
-
-- allowed: comment author OR admin
-- sets `deleted: true` + `deletedAt`
+The client can toggle the deterministic document, while Cloud Functions maintain the derived counts and badge state.
 
 ---
 
-## Firestore security rules (key policies)
+### 2. Idempotency markers
 
-- `userStats`
-  - read: self-only
-  - write: denied (CF-only)
-- `reports`
-  - create: any authed user (must match `reportedBy`)
-  - read/list/delete: admin-only
-- `reactions`
-  - list/query: denied
-  - get/create/delete: allowed only in deterministic contract
-- `users` (public profiles)
-  - `get` allowed
-  - `list` denied (prevents user enumeration)
-- internal collections (`processedEvents`, `reactionLedger`)
-  - deny all client access
+Firestore triggers can retry. Without idempotency, the same event can be applied more than once.
+
+The app uses internal `processedEvents` documents keyed by event identity to avoid duplicate aggregate work.
+
+---
+
+### 3. Reaction ledger
+
+Idempotency alone does not answer whether a reaction was actually counted before a delete event arrives.
+
+The `reactionLedger` records whether a reaction is currently considered counted/active from the backend's perspective.
+
+This helps avoid counter drift from:
+
+- stale create events
+- stale delete events
+- rapid toggle sequences
+- orphan delete events
+- retries
+
+---
+
+### 4. Stale event guards
+
+Reaction triggers check whether the underlying reaction document state still matches the event being processed.
+
+Examples:
+
+- create event arrives but the document was already deleted
+- delete event arrives but the document was already recreated
+
+Those cases are skipped instead of blindly updating counters.
+
+---
+
+### 5. Counter clamping
+
+Decrements clamp counters at `>= 0` as a final safety guard against negative counts.
+
+---
+
+### 6. Soft delete and hard delete lifecycle
+
+Deletion is modeled in two phases:
+
+1. soft delete moves content into Trash / deleted state
+2. hard delete permanently removes related data through privileged backend logic
+
+Scheduled cleanup purges old Trash items after the retention window.
+
+---
+
+### 7. Best-effort external cleanup
+
+Cloudinary cleanup is treated as best-effort. Database deletion should not fail just because an external asset cleanup fails.
+
+Cloudinary cleanup only applies where the relevant `imagePublicId` exists.
+
+---
+
+## Firestore security rules model
+
+The rules aim to enforce important ownership and role boundaries:
+
+- public read access for appropriate public content
+- private saved posts under each user
+- user-owned content creation/update/deletion boundaries
+- deterministic reaction create/delete contract
+- no reaction list/query access
+- userStats read-only to clients
+- internal event/ledger collections denied to clients
+- reports can be created by authenticated users and read by admins
+- users can be fetched individually for public profile/author display while broad user listing is restricted
+- admin access is based on user profile role
+
+### Important security-rule caveat
+
+Some derived post fields are maintained by Cloud Functions, but current rules may still allow a post owner to update more post fields than ideal.
+
+For that reason, the most accurate wording is:
+
+```text
+Cloud Functions-maintained aggregates
+```
+
+not:
+
+```text
+fully backend-authoritative aggregates
+```
+
+unless post field-level restrictions are tightened in a future hardening pass.
 
 ---
 
 ## UX engineering highlights
 
-- Consistent cursor pagination pattern across pages:
-  - `limit(N)` + `startAfter(lastDoc)` + duplicate-safe append (Map merge by `id`)
-  - a11y helpers: `aria-busy`, `aria-disabled`, end-of-list message with `aria-live="polite"`
-- Safe author handling:
-  - `users` allows single `get` but denies `list` (prevents enumeration)
-  - missing author docs surface as not-found with fallback UI (`Unknown author` + default avatar)
-- Reaction UI hardening:
-  - transaction-based toggle + short cooldown
-  - disabled when archived (read-only)
-- Centralized toast utilities with stable IDs and anti-spam behavior
-- Undo toast flow for Saved Posts:
-  - optimistic remove
-  - 7s undo window
-  - deferred DB write
-  - rollback on DB error
-- Skeleton system for initial and incremental loading states
-- Modal standards:
-  - ESC to close
-  - backdrop click to close
-  - body scroll lock
-- Responsive layout:
-  - mobile sheet patterns (filters, comments)
-  - dynamic grid behavior on larger screens
-- UI-safe normalization:
-  - invalid Firestore docs are skipped with warnings
-  - missing authors receive fallback UI objects
+### Saved Posts resilience
+
+Saved Posts is one of the strongest product-quality systems in the app:
+
+- saved docs live under each user
+- snapshot metadata is stored at save time
+- `Promise.allSettled` keeps the list usable if one joined post fails
+- ghost cards preserve context when a source post is missing
+- optimistic unsave includes timed Undo
+- rollback handles failed restore/save operations
+
+### Mobile comments sheet
+
+The comments experience includes a mobile sheet pattern with:
+
+- focus handling
+- body scroll lock
+- ESC/backdrop behavior
+- drag-to-close style behavior
+- collapsed composer behavior
+- realtime thread rendering
+
+### Toast system
+
+Toasts are centralized through utility helpers:
+
+- stable toast IDs
+- de-dupe/update behavior
+- reduced feedback spam
+- consistent success/error/info/warning handling
+
+### Loading and empty states
+
+The app uses:
+
+- skeleton loading
+- empty-state components
+- end-of-list messaging
+- guarded action messages
+- disabled/readonly states
+- progressive loading states
+
+### Accessibility-minded UI details
+
+The app includes pragmatic accessibility helpers:
+
+- skip link
+- focus rings
+- aria states
+- `aria-live` messaging in selected places
+- keyboard handling for overlays
+- scroll lock on modal/sheet surfaces
+
+This should not be presented as a full accessibility audit, but it is a meaningful frontend quality signal.
 
 ---
 
-## CI / Code quality
+## Known limitations and honest caveats
 
-- GitHub Actions CI runs on push / pull request to `main`: `npm install` -> `npm run lint` -> `npm run build`
-- ESLint + Prettier for consistent code style
-- Optional Husky pre-commit hooks (if enabled locally)
+This project is a portfolio-grade engineering case study, not a finished commercial SaaS product.
+
+Important current limitations:
+
+- Some product policies are UI-enforced rather than fully backend/rules-enforced.
+- The 7-day post edit window is mostly UI-level behavior.
+- The 10-minute comment edit window is mostly UI-level behavior.
+- Locked/archive/read-only behavior is mostly UI-level behavior.
+- Post aggregate-like fields are maintained by Cloud Functions but not fully protected from owner mutation under current post rules.
+- Direct comment creation may still be possible through Firestore rules, which means callable comment rate limiting is not completely unbypassable.
+- Comment likes use a simpler client-managed array approach and are not as robust as the post reaction system.
+- Moderation is MVP-light and does not include a full report lifecycle, audit log, assignments, or resolved queue.
+- Profile top posts / total reaction calculations may need stronger aggregate modeling at larger scale.
+- Automated testing is minimal.
+- Backup automation was documented during development, but backup infrastructure is not managed as infrastructure-as-code in this repository.
+- Cloudinary cleanup is best-effort and only applies when the relevant public ID is available.
+
+These limitations are useful future hardening areas and are intentionally documented rather than hidden.
 
 ---
 
 ## Local development
 
-### Prereqs
+### Prerequisites
 
-- Node **20** for the app
-- Node **18** for Cloud Functions runtime
-- npm only (no yarn)
-- Firebase CLI (`firebase --version`)
+- Node version from root `.nvmrc`
+- npm
+- Firebase CLI
 - Optional: nvm
 
 ### Install
@@ -384,109 +584,149 @@ Callable: `softDeleteComment`
 npm install
 ```
 
-### Environment
+### Environment variables
 
-Create a `.env` in the project root (not committed). Provide `.env.example` in the repo.
+Copy the example environment file:
 
-Typical Firebase variables:
+```bash
+cp .env.example .env
+```
 
-- `VITE_FIREBASE_API_KEY`
-- `VITE_FIREBASE_AUTH_DOMAIN`
-- `VITE_FIREBASE_PROJECT_ID`
-- `VITE_FIREBASE_STORAGE_BUCKET`
-- `VITE_FIREBASE_MESSAGING_SENDER_ID`
-- `VITE_FIREBASE_APP_ID`
+Then fill in the required values for your own Firebase/Cloudinary setup.
 
-Security note: The Firebase web API key is restricted by HTTP referrers (allowed domains only).
+Required frontend environment variables:
 
-### Run
+```text
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+VITE_CLOUDINARY_CLOUD_NAME=
+VITE_CLOUDINARY_UPLOAD_PRESET=
+VITE_SUPPORT_EMAIL=
+```
+
+Real `.env` and `.env.staging` files should not be committed.
+
+### Run locally
 
 ```bash
 npm run dev
 ```
 
-Vite dev server: `http://localhost:5173`
+Vite dev server:
 
-### Lint / build
+```text
+http://localhost:5173
+```
+
+### Quality checks
 
 ```bash
 npm run lint
+npm run test
 npm run build
 ```
 
-Build output: `dist/`
+Build output:
+
+```text
+dist/
+```
 
 ---
 
-## Deploy notes
+## Deployment notes
 
-### Cloud Functions
+The repo includes Firebase configuration for:
 
-- Functions runtime: Node 18
-- Firebase Functions v2
-- Region: `europe-central2`
+- Firebase Hosting
+- SPA rewrites
+- Firestore rules
+- Firestore indexes
+- Cloud Functions source
+- Firebase project aliases
 
-Deploy examples:
+Typical deploy commands:
 
 ```bash
-firebase deploy --only functions
 firebase deploy --only hosting
+firebase deploy --only functions
+firebase deploy --only firestore:rules
+firebase deploy --only firestore:indexes
 ```
 
-### Environments: staging vs production
+Environment/project selection should be handled carefully through Firebase project aliases.
 
-`.firebaserc` aliases reduce wrong-project deploy risk:
+Operational work such as staging backup planning was documented separately during development. It is not represented as repo-managed infrastructure in this repository.
 
-- `staging`
-- `prod`
+---
 
-Staging build example:
+### Environment discipline
 
-```bash
-npm run build -- --mode staging
-firebase deploy --only hosting --project staging
+The project used Firebase project aliases to separate staging and production workflows.
+
+The staging setup was used as a safer place to test hosting, rules, functions, and data-related changes before treating the production project as the stable target.
+
+Some operational work, including staging backup planning/export documentation, was handled outside the repository rather than as repo-managed infrastructure.
+
+---
+
+## Testing and CI
+
+The project includes a minimal Vitest smoke-level test setup.
+
+GitHub Actions CI runs on push and pull request to `main`:
+
+```text
+npm install
+npm run lint
+npm run test
+npm run build
 ```
 
----
-
-## Operations
-
-- Staging Firestore backups are automated (GCS bucket + Workflows + Cloud Scheduler), scheduled weekly
-- Bucket lifecycle policy deletes backup objects older than 30 days for cost control
+Current test coverage is intentionally described as minimal. Expanding meaningful automated coverage is a future improvement.
 
 ---
 
-## Testing
+## Engineering notes / lessons learned
 
-- Automated tests are a planned next step
-- Current quality gates focus on linting, production builds, and manual end-to-end verification of core flows
+These are practical notes that came directly from building the project:
 
----
-
-## Gotchas / Lessons learned
-
-- **Retries + out-of-order events.** Firestore triggers can re-run, so reaction counters needed idempotency markers (`processedEvents`) and explicit skip reasons to avoid double-apply.
-- **Gen2 callable "CORS" can hide an auth issue.** A Cloud Run invoker misconfiguration can surface as a browser CORS preflight failure, so verify Cloud Run unauthenticated invocation settings and required composite indexes early.
-- **Fast toggles create race conditions.** Reactions needed stale guards (`stale_create` / `stale_delete`) so outdated events are not applied during rapid user toggling.
-- **Counters drift unless you track whether something was counted.** `reactionLedger` became the per-reaction source of truth: decrement only if the ledger says the increment was applied.
-- **TTL is not correctness.** Firestore TTL deletion is async; TTL is used only to clean technical markers, never as a correctness mechanism.
-- **Soft delete + scheduled purge is safer.** Trash provides a restore window, while a scheduler enforces retention and keeps the database clean without risky immediate-delete UX.
-- **Self-interaction rules matter.** POWERUP rejects self-powerups at the backend to prevent gaming, while the UI communicates the rule clearly.
-- **Firestore indexes are part of production reality.** Any real query mix (`where` + `orderBy`) will eventually require composite indexes, so it is better to design expecting that.
-- **External cleanup must be best-effort.** Cloudinary deletes should never crash a hard-delete flow; the app should still delete database data even if asset cleanup fails.
-- **Batch limits shape architecture.** The 500 writes-per-batch limit directly influenced cascade delete and subtree delete strategies.
+- Firestore triggers can retry, so aggregate updates need idempotency.
+- Fast reaction toggles can create stale create/delete events.
+- A reaction ledger helps track whether an increment was actually applied before a decrement.
+- TTL is cleanup, not correctness.
+- Firestore TTL is useful for technical marker cleanup, but Trash cleanup is handled by scheduled functions.
+- Soft delete gives users a safer recovery window than immediate hard delete.
+- External cleanup, such as Cloudinary asset deletion, should be best-effort.
+- Firestore indexes become part of the architecture once queries combine filters and sorting.
+- Client-side joins need failure handling; `Promise.allSettled` helps one failed item not break an entire list.
+- Some MVP policies are UI-enforced and would need stricter rules/functions before a production release.
+- A good README should describe what the code actually proves, not what the app might become later.
 
 ---
 
 ## Roadmap
 
-- Expand moderation workflows (review queue + actions log)
-- Migrate off legacy Functions config approach
-- Add tests + CI expansion
-- Optional social login providers
+Focused future improvements:
+
+- Harden Firestore rules around post aggregate fields and comment creation paths
+- Expand tests beyond smoke coverage
+- Improve moderation workflow with statuses/actions if needed
+- Add deeper interview/case-study documentation for reaction correctness
+- Consider code-splitting for the large production bundle
+- Review and modernize remaining ESLint/flat-config warnings
+- Improve profile aggregate scalability if the dataset grows
+
+Future ideas should be treated as future improvements, not current features.
 
 ---
 
 ## Author
 
-Created by Aleksandar Todorovic.
+Created by **Aleksandar Todorovic**.
+
+This project is part of a portfolio focused on React, Firebase, product-quality frontend work, and production-style full-stack engineering practice.
