@@ -49,6 +49,16 @@ const mdComponents = {
       {...props}
     />
   ),
+
+  h3: (props) => (
+    <h3
+      className="mt-8 text-base font-semibold tracking-tight text-zinc-100"
+      {...props}
+    />
+  ),
+  ol: (props) => (
+    <ol className="mt-4 list-decimal space-y-2 pl-5 text-zinc-300" {...props} />
+  ),
   p: (props) => <p className="mt-4 leading-7 text-zinc-300" {...props} />,
   ul: (props) => (
     <ul className="mt-4 list-disc space-y-2 pl-5 text-zinc-300" {...props} />
