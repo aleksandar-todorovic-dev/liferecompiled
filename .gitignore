@@ -133,7 +133,6 @@ dist
 # env files (never commit)
 .env
 .env.*
-!.env.example
 
 # firebase local cache
 .firebase/
@@ -144,3 +143,6 @@ functions/.runtimeconfig.json
 functions/.env*
 .env*
 
+
+# Keep a safe env template in the repo
+!.env.example
