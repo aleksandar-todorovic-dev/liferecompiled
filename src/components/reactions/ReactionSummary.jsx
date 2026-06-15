@@ -18,7 +18,7 @@ function maybeShowSelfPowerupToast() {
     // ignore (privacy mode / blocked storage)
   }
 
-  showInfoToast("You can't power up your own post 🙂", {
+  showInfoToast("You can't power up your own post.", {
     toastId: SELF_POWERUP_TOAST_ID,
     autoClose: 1800,
   });

@@ -37,6 +37,7 @@ const Home = () => {
   const [hasMore, setHasMore] = useState(true);
 
   const {
+    searchTerm,
     sortBy,
     selectedCategories,
     setSortBy,
@@ -279,14 +280,32 @@ const Home = () => {
             <SkeletonCard />
           ) : showNoResults ? (
             isTrendingSort ? (
-              <p className="ui-help text-center mt-6" aria-live="polite">
-                No trending posts right now.
-              </p>
+              <section
+                className="ui-card mx-auto mt-6 flex max-w-2xl flex-col items-center px-5 py-8 text-center sm:px-8 sm:py-10"
+                aria-live="polite"
+              >
+                <div
+                  className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-lg font-semibold text-sky-300"
+                  aria-hidden="true"
+                >
+                  •
+                </div>
+                <h2 className="text-base font-semibold text-zinc-100 sm:text-lg">
+                  No trending posts right now
+                </h2>
+                <p className="mt-2 max-w-md text-sm leading-6 text-zinc-400">
+                  Trending posts will appear here when the community starts
+                  reacting.
+                </p>
+              </section>
             ) : (
               <NoResultsMessage
                 posts={finalPosts}
-                searchTerm=""
+                searchTerm={searchTerm}
                 selectedCategories={selectedCategories}
+                canCreate={canShowCreateButton}
+                onCreatePost={() => navigate("/dashboard/create")}
+                onResetFilters={handleResetFilters}
               />
             )
           ) : (

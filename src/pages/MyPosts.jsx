@@ -312,11 +312,14 @@ const MyPosts = () => {
     <div className="pb-2">
       {!isLoading && visiblePosts.length === 0 && !hasMore && (
         <EmptyState
-          message={
+          title={isSearchMode ? "No posts match your search" : "No posts yet"}
+          description={
             isSearchMode
-              ? "No posts match your search."
-              : "You haven't created any posts yet."
+              ? "Try changing your search term."
+              : "Create your first post and manage it from here."
           }
+          actionLabel={isSearchMode ? undefined : "Create post"}
+          actionTo={isSearchMode ? undefined : "/dashboard/create"}
         />
       )}
 

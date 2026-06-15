@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 
 import EditProfileForm from "./EditProfileForm";
 import { SkeletonLine } from "../../../components/ui/skeletonLoader/SkeletonBits";
+import EmptyState from "../components/EmptyState";
 
 /**
  * @component Settings
@@ -247,13 +248,19 @@ const Settings = () => {
               )}
 
               {status === "empty" && (
-                <p className="text-zinc-400">No user data found.</p>
+                <EmptyState
+                  title="Settings unavailable"
+                  description="We couldn't find profile settings for this account."
+                  surface={false}
+                />
               )}
 
               {status === "error" && (
-                <div className="space-y-2">
-                  <p className="text-red-300">{errorMsg}</p>
-                </div>
+                <EmptyState
+                  title="Settings could not be loaded"
+                  description={errorMsg}
+                  surface={false}
+                />
               )}
             </div>
           </section>

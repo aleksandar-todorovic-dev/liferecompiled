@@ -18,6 +18,7 @@ import { normalizeMonthlyArray } from "../../utils/statsUtils";
 
 import Spinner from "../../components/Spinner";
 import CustomTooltip from "./components/CustomTooltip";
+import EmptyState from "./components/EmptyState";
 
 /**
  * @component Stats
@@ -194,11 +195,11 @@ const Stats = () => {
   // If there is no monthly data, show a friendly empty state instead of a blank chart.
   if (postsPerMonth.length === 0) {
     return (
-      <div className="p-5 text-center text-zinc-100">
-        <h2 className="mb-2 text-2xl font-semibold">No data yet</h2>
-        <p className="text-zinc-400">
-          Once you create posts, your monthly activity will appear here.
-        </p>
+      <div className="py-2">
+        <EmptyState
+          title="No activity yet"
+          description="Your stats will appear after you create and interact with posts."
+        />
       </div>
     );
   }

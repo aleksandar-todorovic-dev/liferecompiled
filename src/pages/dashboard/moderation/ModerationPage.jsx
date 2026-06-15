@@ -7,6 +7,8 @@ import { db } from "../../../firebase";
 import { showErrorToast } from "../../../utils/toastUtils";
 import SkeletonCard from "../../../components/ui/skeletonLoader/SkeletonCard";
 import { openReportTarget } from "../../../utils/moderationUtils";
+import Spinner from "../../../components/Spinner";
+import EmptyState from "../components/EmptyState";
 
 /**
  * @component ModerationPage
@@ -77,7 +79,7 @@ const ModerationPage = () => {
   };
 
   if (isCheckingAuth) {
-    return <div>Checking permissions...</div>;
+    return <Spinner message="Checking permissions..." />;
   }
 
   if (!user?.isAdmin) {
@@ -86,74 +88,99 @@ const ModerationPage = () => {
 
   if (isLoadingReports) {
     return (
-      <div>
-        <h1 className="text-2xl font-semibold mb-4">Moderation</h1>
+      <section className="space-y-4 py-2">
+        <header>
+          <h1 className="text-2xl font-semibold text-zinc-100">Moderation</h1>
+          <p className="mt-1 text-sm text-zinc-400">
+            Reviewing recent community reports.
+          </p>
+        </header>
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
             <SkeletonCard key={i} />
           ))}
         </div>
-      </div>
+      </section>
     );
   }
 
   if (error) {
     return (
-      <div>
-        <h1 className="text-2xl font-semibold mb-4">Moderation</h1>
-        <div className="text-red-500 text-sm">{error}</div>
-      </div>
+      <section className="space-y-4 py-2">
+        <header>
+          <h1 className="text-2xl font-semibold text-zinc-100">Moderation</h1>
+        </header>
+        <EmptyState
+          title="Reports could not be loaded"
+          description={error}
+        />
+      </section>
     );
   }
 
   if (reports.length === 0) {
     return (
-      <div>
-        <h1 className="text-2xl font-semibold mb-4">Moderation</h1>
-        <div>No reports yet. 🎉</div>
-      </div>
+      <section className="space-y-4 py-2">
+        <header>
+          <h1 className="text-2xl font-semibold text-zinc-100">Moderation</h1>
+          <p className="mt-1 text-sm text-zinc-400">
+            Recent reports from posts and comments appear here.
+          </p>
+        </header>
+        <EmptyState
+          title="No reports yet"
+          description="There are no community reports waiting for review."
+        />
+      </section>
     );
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold mb-4">Moderation</h1>
+    <section className="space-y-4 py-2">
+      <header>
+        <h1 className="text-2xl font-semibold text-zinc-100">Moderation</h1>
+        <p className="mt-1 text-sm text-zinc-400">
+          Recent reports from posts and comments.
+        </p>
+      </header>
 
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="border-b">
-            <th className="py-2 px-2">Created at</th>
-            <th className="py-2 px-2">Type</th>
-            <th className="py-2 px-2">Target ID</th>
-            <th className="py-2 px-2">Reported by</th>
-            <th className="py-2 px-2">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {reports.map((report) => (
-            <tr key={report.id} className="border-b">
-              <td className="py-2 px-2">
-                {report.createdAt?.toDate
-                  ? report.createdAt.toDate().toLocaleString()
-                  : "-"}
-              </td>
-              <td className="py-2 px-2">{report.type}</td>
-              <td className="py-2 px-2">{report.targetId}</td>
-              <td className="py-2 px-2">{report.reportedBy}</td>
-              <td className="py-2 px-2">
-                <button
-                  type="button"
-                  onClick={() => handleOpenTarget(report)}
-                  className="text-blue-600 underline"
-                >
-                  Open target
-                </button>
-              </td>
+      <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950">
+        <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+          <thead className="bg-zinc-900/70 text-zinc-300">
+            <tr className="border-b border-zinc-800">
+              <th className="px-3 py-3 font-medium">Created at</th>
+              <th className="px-3 py-3 font-medium">Type</th>
+              <th className="px-3 py-3 font-medium">Target ID</th>
+              <th className="px-3 py-3 font-medium">Reported by</th>
+              <th className="px-3 py-3 font-medium">Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-zinc-800 text-zinc-300">
+            {reports.map((report) => (
+              <tr key={report.id}>
+                <td className="px-3 py-3">
+                  {report.createdAt?.toDate
+                    ? report.createdAt.toDate().toLocaleString()
+                    : "-"}
+                </td>
+                <td className="px-3 py-3">{report.type}</td>
+                <td className="px-3 py-3">{report.targetId}</td>
+                <td className="px-3 py-3">{report.reportedBy}</td>
+                <td className="px-3 py-3">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenTarget(report)}
+                    className="font-medium text-sky-300 hover:text-sky-200 hover:underline underline-offset-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                  >
+                    Open target
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 };
 

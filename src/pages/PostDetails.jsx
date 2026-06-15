@@ -285,7 +285,37 @@ const PostDetails = () => {
   const tags = useMemo(() => buildUniqueTags(post?.tags), [post?.tags]);
 
   if (isLoading) return <Spinner />;
-  if (!post) return <p>Post not found.</p>;
+  if (!post) {
+    return (
+      <div className="ui-shell py-10">
+        <section
+          className="ui-card mx-auto flex max-w-2xl flex-col items-center px-5 py-8 text-center sm:px-8 sm:py-10"
+          aria-live="polite"
+        >
+          <div
+            className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-lg font-semibold text-sky-300"
+            aria-hidden="true"
+          >
+            •
+          </div>
+          <h1 className="text-lg font-semibold text-zinc-100">
+            Post not found
+          </h1>
+          <p className="mt-2 max-w-md text-sm leading-6 text-zinc-400">
+            This post may have been removed, archived, or the link may be
+            incorrect.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="ui-button-primary mt-5"
+          >
+            Back to feed
+          </button>
+        </section>
+      </div>
+    );
+  }
 
   /**
    * Toggle saved state for this post.
@@ -319,7 +349,7 @@ const PostDetails = () => {
    */
   const onReportClick = () => {
     if (!user) {
-      showInfoToast("Please login to report 😊", {
+      showInfoToast("Please log in to report.", {
         toastId: REPORT_POST_AUTH_TOAST_ID,
       });
       return;
@@ -335,7 +365,7 @@ const PostDetails = () => {
    */
   const onConfirmReport = async () => {
     if (!user) {
-      showInfoToast("Please login to report 😊", {
+      showInfoToast("Please log in to report.", {
         toastId: REPORT_POST_AUTH_TOAST_ID,
       });
       setShowReportModal(false);

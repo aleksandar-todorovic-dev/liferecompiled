@@ -176,7 +176,7 @@ const CommentItem = ({
   const onReportClick = () => {
     // Auth gate early to avoid opening modal that cannot be confirmed.
     if (!currentUser) {
-      showInfoToast("Please login to report 😊", {
+      showInfoToast("Please log in to report.", {
         toastId: REPORT_COMMENT_AUTH_TOAST_ID,
       });
       return;
@@ -189,7 +189,7 @@ const CommentItem = ({
   const onConfirmReport = async () => {
     // Double-check auth in case session changed while modal was open.
     if (!currentUser) {
-      showInfoToast("Please login to report 😊", {
+      showInfoToast("Please log in to report.", {
         toastId: REPORT_COMMENT_AUTH_TOAST_ID,
       });
       setShowReportModal(false);

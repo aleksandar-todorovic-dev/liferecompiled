@@ -198,7 +198,7 @@ const SavedPosts = () => {
       } catch (error) {
         console.error("Error fetching saved posts (top-level):", error);
         if (!canceled)
-          showErrorToast("Something went wrong.", {
+          showErrorToast("Failed to load saved posts. Please try again.", {
             toastId: SAVED_STATUS_TOAST_ID,
           });
       } finally {
@@ -355,9 +355,12 @@ const SavedPosts = () => {
     return (
       <div className={shell}>
         <div className={wrap}>
-          <div className="ui-card p-6">
-            <p className="text-zinc-300">Please log in to view saved posts.</p>
-          </div>
+          <EmptyState
+            title="Sign in required"
+            description="Log in to view and manage your saved posts."
+            actionLabel="Go to login"
+            actionTo="/login"
+          />
         </div>
       </div>
     );
@@ -367,7 +370,12 @@ const SavedPosts = () => {
     return (
       <div className={shell}>
         <div className={wrap}>
-          <EmptyState message="You haven't saved any posts yet." />
+          <EmptyState
+            title="No saved posts yet"
+            description="Save posts you want to revisit later."
+            actionLabel="Browse posts"
+            actionTo="/"
+          />
         </div>
       </div>
     );

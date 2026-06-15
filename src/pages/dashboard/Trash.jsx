@@ -345,14 +345,21 @@ const Trash = () => {
   // EmptyState: show only when we are done loading and there is no next page.
   const shouldShowEmpty = !isLoading && deletedPosts.length === 0 && !hasMore;
 
-  const emptyMessage = filterRange
-    ? "No posts match this filter."
-    : "You haven't deleted any posts yet.";
+  const emptyState = filterRange
+    ? {
+        title: "No posts match this filter",
+        description: "Try a different time range.",
+      }
+    : {
+        title: "Trash is empty",
+        description:
+          "Deleted posts will appear here before they are permanently removed.",
+      };
 
   return (
     <div className={shell}>
       <div className={wrap}>
-        {shouldShowEmpty && <EmptyState message={emptyMessage} />}
+        {shouldShowEmpty && <EmptyState {...emptyState} />}
 
         {isLoading && (
           <div className={gridBase} role="status" aria-live="polite">

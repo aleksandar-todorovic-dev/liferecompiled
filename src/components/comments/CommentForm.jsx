@@ -119,7 +119,7 @@ const CommentForm = ({
     try {
       // Auth gate: keep UX friendly (toast), avoid throwing UI-level errors.
       if (!user) {
-        showInfoToast("Please login to comment 😊", {
+        showInfoToast("Please log in to comment.", {
           toastId: COMMENT_AUTH_TOAST_ID,
         });
         return;
@@ -222,7 +222,7 @@ const CommentForm = ({
       {showColdStartHint && (
         <p className="mt-2 text-xs text-zinc-400">
           Heads up: the first comment may take a few seconds while the server
-          wakes up. Thanks for your patience 🙂
+          wakes up. Thanks for your patience.
         </p>
       )}
 

@@ -31,7 +31,7 @@ const SAVE_ERROR_TOAST_ID = "saved:error";
  */
 export const toggleSavePost = async (user, postId, isSaved, snapshot) => {
   if (!user) {
-    showInfoToast("Please login to save posts.", {
+    showInfoToast("Please log in to save posts.", {
       toastId: SAVE_AUTH_TOAST_ID,
     });
     return isSaved; // important: do not change local state
@@ -60,7 +60,7 @@ export const toggleSavePost = async (user, postId, isSaved, snapshot) => {
   } catch (error) {
     console.error(error);
 
-    showErrorToast("Something went wrong.", {
+    showErrorToast("Failed to update saved posts. Please try again.", {
       toastId: SAVE_ERROR_TOAST_ID,
     });
 
