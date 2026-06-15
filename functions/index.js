@@ -366,6 +366,23 @@ exports.deleteCommentAndChildren = onCall(async (req) => {
   if (!docSnap.exists)
     throw new HttpsError("not-found", `Comment ${commentId} does not exist.`);
 
+  const commentData = docSnap.data() || {};
+  const uid = req.auth.uid;
+
+  const isAuthor = commentData.userID === uid || commentData.userId === uid;
+
+  const userRef = db.collection("users").doc(uid);
+  const userSnap = await userRef.get();
+  const role = userSnap.exists ? userSnap.data().role : "user";
+  const isAdmin = role === "admin";
+
+  if (!isAuthor && !isAdmin) {
+    throw new HttpsError(
+      "permission-denied",
+      "You are not authorized to delete this comment.",
+    );
+  }
+
   try {
     await deleteCommentBatch(commentId);
     return { success: true };
