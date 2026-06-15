@@ -25,7 +25,6 @@ import { DEFAULT_PROFILE_PICTURE } from "../../constants/defaults";
 import { showErrorToast, showSuccessToast } from "../../utils/toastUtils";
 import ConfirmModal from "../../components/modals/ConfirmModal";
 import { getDaysLeft } from "../../utils/dateUtils";
-import { motion, AnimatePresence } from "framer-motion";
 
 // Components
 import PostCardTrash from "../../components/PostCardTrash";
@@ -366,37 +365,29 @@ const Trash = () => {
         {!isLoading && filteredPosts.length > 0 && (
           <>
             <div className={gridBase}>
-              <AnimatePresence>
-                {filteredPosts.map((post) => {
-                  // Derived display value for the retention countdown UI.
-                  const daysLeft = post.deletedAt
-                    ? getDaysLeft(post.deletedAt)
-                    : null;
+              {filteredPosts.map((post) => {
+                // Derived display value for the retention countdown UI.
+                const daysLeft = post.deletedAt
+                  ? getDaysLeft(post.deletedAt)
+                  : null;
 
-                  return (
-                    <motion.div
-                      key={post.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                    >
-                      <PostCardTrash
-                        post={post}
-                        daysLeft={daysLeft}
-                        onRestore={() => {
-                          setSelectedPostId(post.id);
-                          setRestoreModalOpen(true);
-                        }}
-                        onDeletePermanently={() => {
-                          setPostIdToDelete(post.id);
-                          setDeleteModalOpen(true);
-                        }}
-                      />
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+                return (
+                  <div key={post.id}>
+                    <PostCardTrash
+                      post={post}
+                      daysLeft={daysLeft}
+                      onRestore={() => {
+                        setSelectedPostId(post.id);
+                        setRestoreModalOpen(true);
+                      }}
+                      onDeletePermanently={() => {
+                        setPostIdToDelete(post.id);
+                        setDeleteModalOpen(true);
+                      }}
+                    />
+                  </div>
+                );
+              })}
             </div>
 
             {isLoadingMore && (

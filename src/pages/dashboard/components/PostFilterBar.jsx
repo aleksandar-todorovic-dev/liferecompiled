@@ -1,5 +1,4 @@
 import PropTypes from "prop-types";
-import { motion } from "framer-motion";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -144,6 +143,13 @@ const PostFilterBar = ({
     "border border-zinc-800 bg-zinc-950/40 px-3 text-sm text-zinc-200 " +
     "truncate";
 
+  const filterGroupStyle = {
+    opacity: showDesktopSearch ? (hasSearch ? 0 : 1) : hasSearch ? 0.55 : 1,
+    transform:
+      showDesktopSearch && hasSearch ? "translateY(-4px)" : "translateY(0)",
+    transition: "opacity 200ms ease, transform 200ms ease",
+  };
+
   return (
     <div className="w-full">
       {/* Mobile (<sm) compact actions */}
@@ -276,19 +282,8 @@ const PostFilterBar = ({
             showDesktopSearch ? "sm:justify-between" : "sm:justify-start",
           ].join(" ")}
         >
-          <motion.div
-            initial={false}
-            animate={{
-              opacity: showDesktopSearch
-                ? hasSearch
-                  ? 0
-                  : 1
-                : hasSearch
-                  ? 0.55
-                  : 1,
-              y: showDesktopSearch ? (hasSearch ? -4 : 0) : 0,
-            }}
-            transition={{ duration: 0.2 }}
+          <div
+            style={filterGroupStyle}
             className={`w-full sm:w-auto ${hasSearch ? "pointer-events-none" : ""}`}
             aria-hidden={false}
           >
@@ -315,7 +310,7 @@ const PostFilterBar = ({
                 );
               })}
             </div>
-          </motion.div>
+          </div>
 
           {showDesktopSearch && (
             <div className="flex w-full items-center gap-2 sm:w-auto sm:max-w-md sm:ml-auto">

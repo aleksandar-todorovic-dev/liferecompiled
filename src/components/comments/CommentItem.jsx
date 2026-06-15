@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState, useContext } from "react";
 import PropTypes from "prop-types";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { motion } from "framer-motion";
 import {
   FiMoreHorizontal,
   FiChevronDown,
@@ -399,12 +398,7 @@ const CommentItem = ({
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
-        className="py-3"
-      >
+      <div className="py-3">
         <div className="rounded-xl px-2 sm:px-3 py-2.5 hover:bg-zinc-950/20 transition">
           <div className="grid grid-cols-[40px_minmax(0,1fr)] gap-3 items-start">
             <div className="relative">
@@ -647,7 +641,7 @@ const CommentItem = ({
               ))}
             </div>
           )}
-      </motion.div>
+      </div>
 
       {isMenuOpen &&
         portalRoot &&
