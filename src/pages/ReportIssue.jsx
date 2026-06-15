@@ -6,7 +6,7 @@ import { AuthContext } from "../context/AuthContext";
 import { showErrorToast, showSuccessToast } from "../utils/toastUtils";
 
 const SUPPORT_EMAIL =
-  import.meta.env.VITE_SUPPORT_EMAIL || "support@example.com";
+  import.meta.env.VITE_SUPPORT_EMAIL || "liferecompiled.contact@gmail.com";
 
 /**
  * Build a mailto: link (works with the user's default mail client).

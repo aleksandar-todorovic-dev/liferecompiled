@@ -83,7 +83,7 @@ const Settings = () => {
 
         setUserData(null);
         setStatus("error");
-        setErrorMsg("Failed to load user data. Please refresh and try again.");
+        setErrorMsg("We couldn't load your settings. Please try again later.");
       }
     };
 
@@ -253,10 +253,6 @@ const Settings = () => {
               {status === "error" && (
                 <div className="space-y-2">
                   <p className="text-red-300">{errorMsg}</p>
-                  {/* Helpful debug hint without exposing implementation details to end users. */}
-                  <p className="text-sm text-zinc-500">
-                    Tip: check Firestore rules for the users collection.
-                  </p>
                 </div>
               )}
             </div>

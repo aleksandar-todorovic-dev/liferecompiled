@@ -42,7 +42,7 @@ import { FOCUS_RING } from "../constants/uiClasses";
  * - Builds a "Top 3 posts" list by sorting posts based on reactions total
  *
  * UI:
- * - Hero card: avatar, name, badges, email, member since, stats, bio, highlights
+ * - Hero card: avatar, name, badges, member since, stats, bio, highlights
  * - Top posts card: top 3 most reacted posts (or empty / loading states)
  *
  * Notes:
@@ -306,7 +306,6 @@ const Profile = () => {
     : "---";
 
   const displayName = userData?.name || "Unknown author";
-  const displayEmail = userData?.email || "";
 
   /**
    * Simple engagement heuristic: reactions per post.
@@ -417,13 +416,6 @@ const Profile = () => {
                           </span>
                         )}
                       </div>
-
-                      <p
-                        className="mt-2 text-sm text-zinc-400 [overflow-wrap:anywhere]"
-                        title={displayEmail}
-                      >
-                        {displayEmail}
-                      </p>
 
                       <p className="mt-2 text-xs text-zinc-500">
                         Member since:{" "}

@@ -261,7 +261,7 @@ const MyPosts = () => {
 
       setPostToLock(null);
       setIsLockModalOpen(false);
-      showSuccessToast("Post successfully arhived.");
+      showSuccessToast("Post successfully archived.");
 
       // Update local cache so the UI reflects "locked" without refetching.
       setPosts((prevPosts) =>
