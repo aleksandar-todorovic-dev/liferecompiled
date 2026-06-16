@@ -100,13 +100,13 @@ const Trash = () => {
       }
     : null;
 
-  const gridBase = "grid gap-4 grid-cols-1 lg:grid-cols-2";
+  const gridBase = "grid grid-cols-1 gap-3 sm:gap-4";
 
   // IMPORTANT:
   // Dashboard layout likely already wraps the Outlet with `ui-shell`,
   // so we avoid adding another shell here to prevent a double/narrow wrapper.
   const shell = "w-full pb-2";
-  const wrap = "space-y-6 py-2";
+  const wrap = "space-y-5 py-2";
 
   useEffect(() => {
     let canceled = false;
@@ -356,9 +356,49 @@ const Trash = () => {
           "Deleted posts will appear here before they are permanently removed.",
       };
 
+  const filterLabel =
+    filterRange === "0-10"
+      ? "0-10 days left"
+      : filterRange === "11-20"
+        ? "11-20 days left"
+        : filterRange === "21-30"
+          ? "21-30 days left"
+          : "All deleted posts";
+
   return (
     <div className={shell}>
       <div className={wrap}>
+        <header className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
+                Trash
+              </p>
+              <h1 className="mt-1 text-2xl font-semibold text-zinc-100">
+                Recovery workspace
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-400">
+                Restore deleted posts before the retention window closes, or
+                permanently remove items you no longer need.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap sm:justify-end">
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+                <p className="text-xs text-zinc-500">In trash</p>
+                <p className="font-semibold text-zinc-100">
+                  {isLoading ? "..." : deletedPosts.length}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+                <p className="text-xs text-zinc-500">Filter</p>
+                <p className="font-semibold text-zinc-100">{filterLabel}</p>
+              </div>
+            </div>
+          </div>
+        </header>
+
         {shouldShowEmpty && <EmptyState {...emptyState} />}
 
         {isLoading && (

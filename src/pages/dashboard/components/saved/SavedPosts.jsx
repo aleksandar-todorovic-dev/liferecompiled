@@ -315,14 +315,50 @@ const SavedPosts = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isLoadingMore, hasMore, lastDoc, savedPosts.length]);
 
-  const gridBase = "grid gap-4 grid-cols-1 lg:grid-cols-2";
+  const gridBase = "grid grid-cols-1 gap-3 sm:gap-4";
   const shell = "w-full pb-2";
-  const wrap = "space-y-6 py-1";
+  const wrap = "space-y-5 py-1";
+  const sortLabel =
+    savedSortDirection === "asc" ? "Oldest saved first" : "Recently saved";
+
+  const PageHeader = () => (
+    <header className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-sm sm:p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+            Saved
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold text-zinc-100">
+            Reading list
+          </h1>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-400">
+            Posts saved for later review, reference, and follow-up.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap sm:justify-end">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+            <p className="text-xs text-zinc-500">Saved</p>
+            <p className="font-semibold text-zinc-100">
+              {isLoading ? "..." : savedPosts.length}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+            <p className="text-xs text-zinc-500">Sort</p>
+            <p className="font-semibold text-zinc-100">{sortLabel}</p>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
 
   if (isCheckingAuth || isLoading) {
     return (
       <div className={shell}>
         <div className={wrap}>
+          <PageHeader />
+
           <div className={gridBase} role="status" aria-live="polite">
             {Array.from({ length: 10 }).map((_, i) => (
               <SkeletonCard key={i} />
@@ -355,6 +391,8 @@ const SavedPosts = () => {
     return (
       <div className={shell}>
         <div className={wrap}>
+          <PageHeader />
+
           <EmptyState
             title="Sign in required"
             description="Log in to view and manage your saved posts."
@@ -370,6 +408,8 @@ const SavedPosts = () => {
     return (
       <div className={shell}>
         <div className={wrap}>
+          <PageHeader />
+
           <EmptyState
             title="No saved posts yet"
             description="Save posts you want to revisit later."
@@ -486,6 +526,8 @@ const SavedPosts = () => {
   return (
     <div className={shell}>
       <div className={wrap}>
+        <PageHeader />
+
         <div className={gridBase}>
           {savedPosts.map((post) => {
             const isPending = pendingUndoRef.current.has(post.id);

@@ -1,18 +1,15 @@
 import PropTypes from "prop-types";
 import { useContext, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BsBookmark, BsBookmarkFill } from "react-icons/bs";
+import { BsBookmarkFill } from "react-icons/bs";
 
 import { AuthContext } from "../../../../context/AuthContext";
 import { useCheckSavedStatus } from "../../../../hooks/useCheckSavedStatus";
 
 import Badge from "../../../../components/ui/Bagde";
-import Avatar from "../../../../components/common/Avatar";
 import BadgeModal from "../../../../components/modals/BadgeModal";
-import ShieldIcon from "../../../../components/ui/ShieldIcon";
 
 import { toggleSavePost } from "../../../../utils/savedPostUtils";
-import { DEFAULT_PROFILE_PICTURE } from "../../../../constants/defaults";
 import { formatPostDateLabel } from "../../../../utils/formatDate";
 
 import {
@@ -67,7 +64,6 @@ const SavedPostCard = ({ post, onUnsave, isPendingUndo = false }) => {
 
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState(null);
-  const [showTopContributorModal, setShowTopContributorModal] = useState(false);
 
   // Tag rail: normalize + case-insensitive dedupe + cap for predictable card height.
   const allTags = useMemo(() => {
@@ -153,18 +149,16 @@ const SavedPostCard = ({ post, onUnsave, isPendingUndo = false }) => {
   }
 
   const cardBase =
-    "relative w-full h-full overflow-hidden p-4 " +
-    "rounded-2xl border border-zinc-800/70 " +
-    "bg-zinc-950/55 shadow-sm " +
-    "flex flex-col transition-colors transition-shadow duration-200";
+    "relative flex h-full w-full flex-col overflow-hidden rounded-2xl " +
+    "border border-zinc-800 bg-zinc-950 p-4 shadow-sm";
 
   // Locked posts remain navigable, but the visual style communicates restricted state.
   const cardInteractive = post?.locked
     ? "cursor-pointer"
-    : "cursor-pointer hover:bg-zinc-950/70 hover:border-zinc-700/80";
+    : "cursor-pointer hover:border-zinc-700 hover:bg-zinc-950/90";
 
   const cardLocked = post?.locked
-    ? "opacity-60 grayscale saturate-0 bg-zinc-950/80 border-zinc-800/90 ring-zinc-100/5"
+    ? "border-amber-500/20"
     : "";
 
   // Ensure tag pills do NOT truncate even if `PILL_TAG` includes truncation utilities.
@@ -214,9 +208,7 @@ const SavedPostCard = ({ post, onUnsave, isPendingUndo = false }) => {
             disabled={isPendingUndo}
             aria-disabled={isPendingUndo}
             className={
-              `shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium ` +
-              `border border-rose-500/25 bg-rose-500/10 text-rose-200 ` +
-              `hover:bg-rose-500/15 hover:border-rose-400/30 ` +
+              `ui-button-secondary shrink-0 px-3 py-2 text-sm ` +
               `${isPendingUndo ? "opacity-60 cursor-not-allowed" : ""} ${FOCUS_RING}`
             }
             title={isPendingUndo ? "Undo pending..." : "Remove from saved"}
@@ -247,40 +239,23 @@ const SavedPostCard = ({ post, onUnsave, isPendingUndo = false }) => {
         className={`${cardBase} ${cardInteractive} ${cardLocked}`}
         onClick={handleCardClick}
       >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <div
-              className="relative shrink-0"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Avatar
-                src={post?.author?.profilePicture || DEFAULT_PROFILE_PICTURE}
-                size={40}
-                zoomable
-                badge={post?.author?.badges?.topContributor}
-              />
-
-              {post?.author?.badges?.topContributor && (
-                <button
-                  type="button"
-                  className="group absolute -top-2 -right-1 z-10"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowTopContributorModal(true);
-                  }}
-                  aria-label="Top contributor info"
-                  title="Top Contributor"
-                >
-                  <ShieldIcon className="w-5 h-5 text-amber-300 group-hover:scale-110 transition-transform" />
-                </button>
-              )}
-            </div>
-
-            <span className="min-w-0">
-              <span className="font-semibold text-sm text-zinc-100 line-clamp-1">
-                {post?.author?.name || "Unknown"}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+              <span>Saved reference</span>
+              <span aria-hidden="true">•</span>
+              <span className="line-clamp-1">
+                {post?.author?.name || "Unknown author"}
               </span>
-            </span>
+              {post?.savedAt?.toDate?.() ? (
+                <>
+                  <span aria-hidden="true">•</span>
+                  <span>
+                    Saved {post.savedAt.toDate().toLocaleDateString()}
+                  </span>
+                </>
+              ) : null}
+            </div>
           </div>
 
           <button
@@ -288,22 +263,15 @@ const SavedPostCard = ({ post, onUnsave, isPendingUndo = false }) => {
             onClick={handleSaveToggle}
             disabled={isPendingUndo}
             aria-disabled={isPendingUndo}
-            className={`rounded-lg p-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-950/25 transition ${
+            className={`ui-button-secondary shrink-0 px-3 py-2 text-sm ${
               isPendingUndo ? "opacity-50 cursor-not-allowed" : ""
             } ${FOCUS_RING}`}
             title={
-              isPendingUndo
-                ? "Undo pending..."
-                : isSaved
-                  ? "Remove from saved"
-                  : "Save this post"
+              isPendingUndo ? "Undo pending..." : "Remove from saved"
             }
           >
-            {isSaved ? (
-              <BsBookmarkFill className="h-4 w-4 text-sky-200" />
-            ) : (
-              <BsBookmark className="h-4 w-4" />
-            )}
+            <BsBookmarkFill className="h-4 w-4 text-sky-200" />
+            Remove
           </button>
         </div>
 
@@ -358,7 +326,7 @@ const SavedPostCard = ({ post, onUnsave, isPendingUndo = false }) => {
             </span>
           )}
 
-          {/* Archived pill removed on Saved cards (grayscale is enough). */}
+          {/* Keep the status row height stable when there is no update marker. */}
           {!isUpdatedSinceSaved && <span className="sr-only"> </span>}
         </div>
 
@@ -416,15 +384,6 @@ const SavedPostCard = ({ post, onUnsave, isPendingUndo = false }) => {
           badgeKey={selectedBadge}
           locked={post?.locked}
           onClose={() => setShowBadgeModal(false)}
-        />
-      )}
-
-      {showTopContributorModal && (
-        <BadgeModal
-          isOpen={showTopContributorModal}
-          locked={post?.locked}
-          authorBadge="topContributor"
-          onClose={() => setShowTopContributorModal(false)}
         />
       )}
     </>
