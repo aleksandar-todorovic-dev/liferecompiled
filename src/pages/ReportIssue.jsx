@@ -79,6 +79,7 @@ const ReportIssue = () => {
   const [details, setDetails] = useState("");
   const [steps, setSteps] = useState("");
   const [showSteps, setShowSteps] = useState(false);
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
   /**
    * Debug metadata to include in the email body.
@@ -152,6 +153,8 @@ const ReportIssue = () => {
    * @returns {boolean}
    */
   const validateRequired = () => {
+    setAttemptedSubmit(true);
+
     if (!title.trim() || !details.trim()) {
       showErrorToast("Please enter a title and a message.", {
         toastId: "report-required",
@@ -187,148 +190,226 @@ const ReportIssue = () => {
     }
   };
 
+  const titleHasError = attemptedSubmit && !title.trim();
+  const detailsHasError = attemptedSubmit && !details.trim();
+  const titleDescriptionIds = titleHasError
+    ? "report-title-help report-title-error"
+    : "report-title-help";
+  const detailsDescriptionIds = detailsHasError
+    ? "report-details-help report-details-error"
+    : "report-details-help";
+
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-10">
-      <div className="ui-card p-6 sm:p-8">
-        <h2 className="text-2xl font-semibold text-zinc-100">
-          Support & feedback
-        </h2>
-        <p className="mt-1 text-sm text-zinc-300">
-          Send a bug report, feedback, or a feature request. Basic debug info is
-          included automatically.
-        </p>
+    <div className="w-full px-3 py-8 sm:px-6 lg:px-8 lg:py-10">
+      <div className="mx-auto w-full max-w-5xl">
+        <header className="mb-5 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 shadow-sm sm:p-7">
+          <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+            Support
+          </p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-zinc-100">
+            Support & feedback
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-300 sm:text-base">
+            Send a bug report, feedback, or a feature request. Your message is
+            handed off to email with useful app context included automatically.
+          </p>
+        </header>
 
-        <div className="mt-6 space-y-4">
-          {/* Category */}
-          <div className="space-y-2">
-            <label className="ui-label" htmlFor="report-type">
-              Category
-            </label>
-            <select
-              id="report-type"
-              className="ui-input"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-            >
-              {TYPE_OPTIONS.map((opt) => (
-                <option key={opt}>{opt}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Title */}
-          <div className="space-y-2">
-            <label className="ui-label" htmlFor="report-title">
-              Title <span className="text-zinc-400">(required)</span>
-            </label>
-            <input
-              id="report-title"
-              className="ui-input"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Short summary (e.g. 'Search freezes')"
-              autoComplete="off"
-              maxLength={120}
-            />
-            <p className="text-xs text-zinc-400">
-              Keep it short — you can explain below.
-            </p>
-          </div>
-
-          {/* Message */}
-          <div className="space-y-2">
-            <label className="ui-label" htmlFor="report-details">
-              Message <span className="text-zinc-400">(required)</span>
-            </label>
-            <textarea
-              id="report-details"
-              className="ui-input min-h-[140px]"
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              placeholder="What happened, what did you expect, or what should be improved?"
-            />
-          </div>
-
-          {/* Steps toggle + textarea */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-3">
-              <label className="ui-label" htmlFor="report-steps">
-                Steps <span className="text-zinc-400">(optional)</span>
-              </label>
-
-              <button
-                type="button"
-                className="text-xs text-zinc-300 hover:text-zinc-100 hover:underline underline-offset-4"
-                onClick={() => setShowSteps((v) => !v)}
-              >
-                {showSteps ? "Hide steps" : "Add steps"}
-              </button>
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(240px,320px)]">
+          <main className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 shadow-sm sm:p-6">
+            <div className="mb-5">
+              <h2 className="text-xl font-semibold text-zinc-100">
+                Write your message
+              </h2>
+              <p className="mt-1 text-sm text-zinc-400">
+                A title and message are required before opening an email draft.
+              </p>
             </div>
 
-            {showSteps && (
-              <textarea
-                id="report-steps"
-                className="ui-input min-h-[120px]"
-                value={steps}
-                onChange={(e) => setSteps(e.target.value)}
-                placeholder={"1) ...\n2) ...\n3) ..."}
-              />
-            )}
-          </div>
+            <div className="space-y-5">
+              {/* Category */}
+              <div>
+                <label className="ui-label" htmlFor="report-type">
+                  Category
+                </label>
+                <select
+                  id="report-type"
+                  className="ui-input"
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                >
+                  {TYPE_OPTIONS.map((opt) => (
+                    <option key={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
 
-          {/* Debug info */}
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 text-xs text-zinc-300">
-            <div className="font-semibold text-zinc-200">
-              Included debug info
+              {/* Title */}
+              <div>
+                <label className="ui-label" htmlFor="report-title">
+                  Title <span className="text-zinc-400">(required)</span>
+                </label>
+                <input
+                  id="report-title"
+                  className="ui-input"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Short summary, e.g. Search freezes"
+                  autoComplete="off"
+                  maxLength={120}
+                  aria-invalid={titleHasError ? "true" : "false"}
+                  aria-describedby={titleDescriptionIds}
+                />
+                <p id="report-title-help" className="ui-help text-xs">
+                  Keep it short. You can explain below.
+                </p>
+                {titleHasError && (
+                  <p id="report-title-error" className="ui-error" role="alert">
+                    Add a short title before sending.
+                  </p>
+                )}
+              </div>
+
+              {/* Message */}
+              <div>
+                <label className="ui-label" htmlFor="report-details">
+                  Message <span className="text-zinc-400">(required)</span>
+                </label>
+                <textarea
+                  id="report-details"
+                  className="ui-input min-h-[150px]"
+                  value={details}
+                  onChange={(e) => setDetails(e.target.value)}
+                  placeholder="What happened, what did you expect, or what should be improved?"
+                  aria-invalid={detailsHasError ? "true" : "false"}
+                  aria-describedby={detailsDescriptionIds}
+                />
+                <p id="report-details-help" className="ui-help text-xs">
+                  Include what happened and what would have helped.
+                </p>
+                {detailsHasError && (
+                  <p
+                    id="report-details-error"
+                    className="ui-error"
+                    role="alert"
+                  >
+                    Add a message before sending.
+                  </p>
+                )}
+              </div>
+
+              {/* Steps toggle + textarea */}
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <label className="ui-label" htmlFor="report-steps">
+                      Steps to reproduce
+                    </label>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      Optional, useful for bugs or UI issues.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="ui-button-secondary px-3 py-1.5 text-xs"
+                    onClick={() => setShowSteps((v) => !v)}
+                  >
+                    {showSteps ? "Hide" : "Add steps"}
+                  </button>
+                </div>
+
+                {showSteps && (
+                  <textarea
+                    id="report-steps"
+                    className="ui-input min-h-[120px]"
+                    value={steps}
+                    onChange={(e) => setSteps(e.target.value)}
+                    placeholder={"1) ...\n2) ...\n3) ..."}
+                  />
+                )}
+              </div>
             </div>
-            <div className="mt-2 grid gap-1">
-              <div>Route: {meta.route}</div>
-              <div>User: {meta.uid}</div>
-              <div>Email: {meta.email}</div>
-            </div>
-          </div>
+          </main>
 
-          {/* Actions */}
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <a
-              href={gmailHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ui-button-primary text-center"
-              onClick={(e) => {
-                if (!validateRequired()) e.preventDefault();
-              }}
+          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 shadow-sm">
+              <h2 className="text-base font-semibold text-zinc-100">
+                Send report
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-zinc-400">
+                Choose the email handoff that works best on this device.
+              </p>
+
+              <div className="mt-4 grid gap-2">
+                <a
+                  href={gmailHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ui-button-primary text-center"
+                  onClick={(e) => {
+                    if (!validateRequired()) e.preventDefault();
+                  }}
+                >
+                  Open Gmail
+                </a>
+
+                <a
+                  href={mailtoHref}
+                  className="ui-button-secondary text-center"
+                  onClick={(e) => {
+                    if (!validateRequired()) e.preventDefault();
+                  }}
+                >
+                  Open email app
+                </a>
+
+                <button
+                  type="button"
+                  className="ui-button-secondary"
+                  onClick={handleCopy}
+                >
+                  Copy report
+                </button>
+              </div>
+
+              <p className="mt-4 text-xs leading-5 text-zinc-500">
+                If nothing opens, copy the report and paste it into an email to{" "}
+                <span className="font-semibold text-zinc-300">
+                  {SUPPORT_EMAIL}
+                </span>
+                .
+              </p>
+            </section>
+
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 shadow-sm">
+              <h2 className="text-base font-semibold text-zinc-100">
+                Included context
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-zinc-400">
+                These details are added to the email so the report is easier to
+                understand.
+              </p>
+
+              <details className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-xs text-zinc-300">
+                <summary className="cursor-pointer font-semibold text-zinc-200">
+                  View included details
+                </summary>
+                <div className="mt-3 grid gap-1">
+                  <div>Route: {meta.route}</div>
+                  <div>User: {meta.uid}</div>
+                  <div>Email: {meta.email}</div>
+                </div>
+              </details>
+            </section>
+
+            <Link
+              to="/"
+              className="inline-flex text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:underline underline-offset-4"
             >
-              Open Gmail (web)
-            </a>
-
-            <a
-              href={mailtoHref}
-              className="ui-button-secondary text-center"
-              onClick={(e) => {
-                if (!validateRequired()) e.preventDefault();
-              }}
-            >
-              Open email app (device)
-            </a>
-
-            <button
-              type="button"
-              className="ui-button-secondary"
-              onClick={handleCopy}
-            >
-              Copy report
-            </button>
-
-            <Link to="/" className="ui-button-secondary text-center">
               Back home
             </Link>
-          </div>
-
-          <p className="text-xs text-zinc-400">
-            If nothing opens, use Copy and paste into an email to:{" "}
-            <span className="font-semibold text-zinc-200">{SUPPORT_EMAIL}</span>
-          </p>
+          </aside>
         </div>
       </div>
     </div>

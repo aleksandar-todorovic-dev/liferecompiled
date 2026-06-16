@@ -45,7 +45,7 @@ const mdComponents = {
   ),
   h2: (props) => (
     <h2
-      className="mt-10 text-xl font-semibold tracking-tight text-zinc-100"
+      className="mt-10 border-t border-zinc-800 pt-8 text-xl font-semibold tracking-tight text-zinc-100 first:mt-0 first:border-t-0 first:pt-0"
       {...props}
     />
   ),
@@ -117,7 +117,7 @@ const mdComponents = {
 
   blockquote: (props) => (
     <blockquote
-      className="mt-6 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3 text-zinc-300"
+      className="mt-6 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-zinc-300"
       {...props}
     />
   ),
@@ -152,6 +152,12 @@ const mdComponents = {
   },
 };
 
+const proofPoints = [
+  "React/Vite app with Firebase Auth, Firestore, and Cloud Functions",
+  "Backend-owned counters, badge rules, and scheduled cleanup flows",
+  "Dashboard workflows for posts, saved items, stats, trash, and moderation",
+];
+
 /**
  * @component About
  *
@@ -166,43 +172,28 @@ const About = () => {
   const { title, body } = getMarkdownTitleAndBody(aboutMdRaw);
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-1.5 py-10 sm:px-4">
-      <div className="ui-card p-6 sm:p-8">
+    <div className="w-full px-3 py-8 sm:px-6 lg:px-8 lg:py-10">
+      <div className="mx-auto w-full max-w-7xl">
         {/* Hero */}
-        <div className="mb-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950/40 px-3 py-1 text-[11px] font-semibold tracking-wide uppercase text-zinc-300">
-            <span className="h-3.5 w-3.5 rounded-full bg-sky-300" />
-            About
-          </div>
+        <header className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 shadow-sm sm:p-7 lg:p-8">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-300">
+              Product case study
+            </div>
 
-          <h1 className="mt-4 text-3xl sm:text-4xl font-bold tracking-tight text-zinc-100">
-            {title || "About"}
-          </h1>
-        </div>
+            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-zinc-100 sm:text-4xl lg:text-5xl">
+              {title || "About"}
+            </h1>
 
-        {/* Content */}
-        <div className="relative border-t border-zinc-800 pt-6">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 -top-px h-px bg-gradient-to-r from-sky-400/20 via-transparent to-fuchsia-400/20"
-          />
-
-          <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-            {body}
-          </ReactMarkdown>
-        </div>
-
-        {/* CTA */}
-        <div className="mt-10 border-t border-zinc-800 pt-6">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-zinc-400">
-              Have feedback or found a bug? Use the in-app report flow so it
-              includes helpful context.
+            <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-300 sm:text-lg">
+              A serious full-stack portfolio project focused on product
+              behavior, data integrity, permissions, and deploy-ready
+              engineering decisions.
             </p>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row">
               <Link to="/" className="ui-button-secondary text-center">
-                Back home
+                Explore app
               </Link>
 
               <Link to="/report" className="ui-button-primary text-center">
@@ -210,6 +201,64 @@ const About = () => {
               </Link>
             </div>
           </div>
+        </header>
+
+        <div className="grid gap-5 lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)] lg:items-start">
+          <aside className="space-y-4 lg:sticky lg:top-24">
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                Proof points
+              </p>
+
+              <ul className="mt-3 space-y-3 text-sm leading-6 text-zinc-300">
+                {proofPoints.map((point) => (
+                  <li key={point} className="flex gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-300" />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                Project framing
+              </p>
+              <p className="mt-2 text-sm leading-6 text-zinc-400">
+                Built as a small practical product, not a startup pitch. The
+                emphasis is on traceable engineering decisions and demo-ready
+                behavior.
+              </p>
+            </section>
+          </aside>
+
+          <main className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 shadow-sm sm:p-7 lg:p-8">
+            <div className="mb-6 border-b border-zinc-800 pb-5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                Implementation notes
+              </p>
+              <h2 className="mt-1 text-xl font-semibold text-zinc-100">
+                What the app implements
+              </h2>
+            </div>
+
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+              {body}
+            </ReactMarkdown>
+
+            <div className="mt-10 border-t border-zinc-800 pt-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm leading-6 text-zinc-400">
+                  Have feedback or found a bug? The support flow includes useful
+                  context automatically.
+                </p>
+
+                <Link to="/report" className="ui-button-secondary text-center">
+                  Open support
+                </Link>
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     </div>
