@@ -146,3 +146,8 @@ functions/.env*
 
 # Keep a safe env template in the repo
 !.env.example
+
+# Local Firebase admin keys
+functions/.secrets/
+*.serviceAccount.json
+serviceAccountKey.json
