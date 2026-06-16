@@ -442,25 +442,19 @@ const PostDetails = () => {
 
   // Layout classes
   const wrapperClass =
-    "w-full max-w-7xl mx-auto my-0 sm:my-8 " +
+    "w-full max-w-7xl mx-auto my-0 px-3 sm:my-8 sm:px-4 lg:px-6 " +
     "pb-[calc(1.25rem+env(safe-area-inset-bottom))] lg:pb-0";
 
   const gridClass =
-    "grid gap-4 lg:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] lg:items-start";
+    "grid gap-5 lg:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] lg:items-start";
 
   const cardBase =
-    "rounded-none border-0 bg-transparent ring-0 shadow-none " +
-    "sm:rounded-2xl sm:border sm:border-zinc-800/70 sm:bg-zinc-950/40 sm:ring-1 sm:ring-zinc-100/5 sm:shadow-sm";
+    "rounded-2xl border border-zinc-800 bg-zinc-950 shadow-sm";
 
   const postCardClass = [
     cardBase,
-    "overflow-visible sm:overflow-hidden p-1 sm:p-6",
-    "flex flex-col",
-    "min-h-[calc(100vh-7.5rem)] min-h-[calc(100svh-7.5rem)] sm:min-h-0",
-    "lg:h-[calc(100vh-9rem)]",
-    post.locked
-      ? "opacity-90 grayscale hover:opacity-100 transition duration-200"
-      : "",
+    "overflow-hidden p-4 sm:p-6 lg:p-8",
+    post.locked ? "border-amber-500/25" : "",
   ].join(" ");
 
   const TAG_PILL =
@@ -536,7 +530,7 @@ const PostDetails = () => {
                     type="button"
                     onClick={handleSaveToggle}
                     title={isSaved ? "Remove from saved" : "Save this post"}
-                    className="rounded-xl p-2 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-900/40 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                    className="rounded-xl border border-zinc-800 bg-zinc-900 p-2 text-zinc-300 hover:border-zinc-700 hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                   >
                     {isSaved ? (
                       <BsBookmarkFill className="text-sky-200" />
@@ -549,7 +543,7 @@ const PostDetails = () => {
                     type="button"
                     onClick={onReportClick}
                     aria-label="Report"
-                    className="rounded-xl px-2.5 py-2 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-900/40 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                    className="rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 py-2 text-zinc-300 hover:border-zinc-700 hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                   >
                     <FiFlag className="text-lg sm:hidden" />
                     <span className="hidden sm:inline">Report</span>
@@ -558,7 +552,7 @@ const PostDetails = () => {
               </div>
 
               {/* Post title */}
-              <h1 className="mt-3 text-[1.45rem] leading-tight sm:text-3xl font-bold text-zinc-100 break-words">
+              <h1 className="mt-5 text-3xl font-semibold leading-tight text-zinc-100 break-words sm:text-4xl">
                 {post.title}
               </h1>
 
@@ -566,7 +560,7 @@ const PostDetails = () => {
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {post?.category && (
                   <span
-                    className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-950/40 px-2.5 py-1 text-xs text-zinc-200"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-xs text-zinc-200"
                     aria-label={`Category: ${post.category}`}
                     title={`Category: ${post.category}`}
                   >
@@ -595,7 +589,7 @@ const PostDetails = () => {
                 {post.locked && lockedDate && (
                   <span
                     title="This post is archived and cannot be edited or commented"
-                    className="inline-flex h-7 items-center gap-1 rounded-full border border-zinc-800 bg-zinc-950/40 px-2 text-xs text-zinc-200"
+                    className="inline-flex h-7 items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 text-xs text-amber-100"
                   >
                     <FiLock className="w-4 h-4 shrink-0" />
                     <span className="relative top-px">
@@ -607,15 +601,15 @@ const PostDetails = () => {
             </div>
 
             {/* BODY */}
-            <div className="mt-6 flex-1 min-h-0 overflow-y-visible lg:overflow-y-auto lg:pr-1 ui-scrollbar">
-              <div className="space-y-6">
+            <div className="mt-7">
+              <div className="space-y-7">
                 {post?.description && (
-                  <p className="text-zinc-200 text-base leading-relaxed break-words">
+                  <p className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-base leading-7 text-zinc-200 break-words">
                     {post.description}
                   </p>
                 )}
 
-                <div className="text-zinc-200 whitespace-pre-wrap break-words leading-relaxed">
+                <div className="whitespace-pre-wrap text-base leading-8 text-zinc-200 break-words">
                   {post?.content}
                 </div>
               </div>
@@ -655,7 +649,7 @@ const PostDetails = () => {
                     </div>
 
                     {/* Fade edge for horizontal scroll */}
-                    <div className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-zinc-950/30 to-transparent" />
+                    <div className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-zinc-950 to-transparent" />
                   </div>
                 </div>
 
@@ -698,12 +692,12 @@ const PostDetails = () => {
         {isLgUp && (
           <aside className="hidden lg:block min-w-0">
             <div
-              className={`${cardBase} lg:sticky lg:top-24 flex flex-col h-[calc(100vh-9rem)]`}
+              className={`${cardBase} lg:sticky lg:top-24 flex h-[calc(100vh-9rem)] flex-col overflow-hidden`}
             >
               <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-zinc-800/70">
                 <div className="min-w-0">
                   <h2 className="text-sm font-semibold text-zinc-100">
-                    Comments
+                    Discussion
                   </h2>
                   <p className="mt-0.5 text-xs text-zinc-500">
                     {commentsCount} total
@@ -726,7 +720,7 @@ const PostDetails = () => {
               </div>
 
               {/* Comment form (separate render to keep it always visible at bottom) */}
-              <div className="flex-none border-t border-zinc-800/70 bg-zinc-950/20 px-4 py-3">
+              <div className="flex-none border-t border-zinc-800 bg-zinc-950 px-4 py-3">
                 <Comments
                   postID={postId}
                   locked={post.locked}
@@ -741,17 +735,17 @@ const PostDetails = () => {
 
       {/* Mobile bottom bar (opens CommentsSheet) */}
       {!isLgUp && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-800/70 bg-zinc-950/95">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-800 bg-zinc-950">
           <div className="mx-auto w-full max-w-7xl px-3 py-3">
             <button
               type="button"
               onClick={() => setIsCommentsOpen(true)}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-full border border-zinc-800 bg-zinc-950 px-4 py-3 text-zinc-100 shadow-sm hover:bg-zinc-900/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
-              aria-label="Open comments"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-4 py-3 text-zinc-100 shadow-sm hover:border-zinc-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              aria-label="Open discussion"
             >
               <FiMessageCircle className="text-lg" />
-              <span className="text-sm font-medium">Comments</span>
-              <span className="ml-1 inline-flex min-w-7 justify-center rounded-full border border-zinc-800 bg-zinc-950/60 px-2 py-0.5 text-xs text-zinc-300">
+              <span className="text-sm font-medium">Open discussion</span>
+              <span className="ml-1 inline-flex min-w-7 justify-center rounded-full border border-zinc-800 bg-zinc-950 px-2 py-0.5 text-xs text-zinc-300">
                 {commentsCount}
               </span>
             </button>

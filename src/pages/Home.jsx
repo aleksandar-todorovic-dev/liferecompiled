@@ -193,6 +193,13 @@ const Home = () => {
   );
 
   const showNoResults = !isLoading && finalPosts.length === 0;
+  const activeViewLabel = isTrendingSort
+    ? "Trending"
+    : activeCategory
+      ? activeCategory
+      : sortBy === "oldest"
+        ? "Oldest first"
+        : "Newest first";
 
   const handleToggleDesktopSidebar = () =>
     setIsDesktopSidebarOpen((prev) => !prev);
@@ -273,6 +280,37 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      <header className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+              Public feed
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold text-zinc-100">
+              Discover posts
+            </h1>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-400">
+              Browse writing, ideas, and community feedback from LifeRecompiled
+              authors.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap sm:justify-end">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+              <p className="text-xs text-zinc-500">Showing</p>
+              <p className="font-semibold text-zinc-100">
+                {isLoading ? "..." : finalPosts.length}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+              <p className="text-xs text-zinc-500">View</p>
+              <p className="font-semibold text-zinc-100">{activeViewLabel}</p>
+            </div>
+          </div>
+        </div>
+      </header>
 
       <div className={layoutClass}>
         <div>

@@ -398,8 +398,8 @@ const CommentItem = ({
 
   return (
     <>
-      <div className="py-3">
-        <div className="rounded-xl px-2 sm:px-3 py-2.5 hover:bg-zinc-950/20 transition">
+      <div className={depth === 0 ? "py-1" : "py-0.5"}>
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-3">
           <div className="grid grid-cols-[40px_minmax(0,1fr)] gap-3 items-start">
             <div className="relative">
               <Avatar
@@ -493,7 +493,7 @@ const CommentItem = ({
                     name="editedComment"
                     value={editedContent}
                     onChange={(e) => setEditedContent(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950/40 p-2 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 resize-none max-h-40 overflow-y-auto"
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950 p-2 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 resize-none max-h-40 overflow-y-auto"
                     aria-label="Edit comment"
                   />
                   <div className="flex gap-3 mt-2 text-sm">
@@ -559,7 +559,7 @@ const CommentItem = ({
                     ref={menuBtnRef}
                     type="button"
                     onClick={openMenu}
-                    className="inline-flex items-center justify-center rounded-lg p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                    className="inline-flex items-center justify-center rounded-lg p-2 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                     aria-label="More actions"
                     aria-expanded={isMenuOpen}
                   >
@@ -587,7 +587,7 @@ const CommentItem = ({
                   <button
                     type="button"
                     onClick={() => setIsRepliesOpen((v) => !v)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-950/40 px-2.5 py-1 text-xs text-sky-200 hover:bg-zinc-900/40 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-xs text-sky-200 hover:border-zinc-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                     aria-label={isRepliesOpen ? "Hide replies" : "View replies"}
                   >
                     {isRepliesOpen ? <FiChevronUp /> : <FiChevronDown />}
@@ -610,12 +610,12 @@ const CommentItem = ({
             <div
               className={[
                 "mt-3 space-y-2 relative",
-                "border-l-2 border-zinc-800/40",
+                "border-l-2 border-zinc-800",
                 getRepliesIndent(depth),
               ].join(" ")}
             >
               <span
-                className="absolute -left-[5px] top-2 h-2 w-2 rounded-full bg-zinc-800/60"
+                className="absolute -left-[5px] top-2 h-2 w-2 rounded-full bg-zinc-700"
                 aria-hidden="true"
               />
 

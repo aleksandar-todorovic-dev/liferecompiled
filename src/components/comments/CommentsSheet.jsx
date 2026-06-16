@@ -186,7 +186,7 @@ const CommentsSheet = ({
           ref={panelRef}
           role="dialog"
           aria-modal="true"
-          aria-label="Comments"
+          aria-label="Discussion"
           style={panelTransformStyle}
           className={[
             "h-full w-full sm:max-w-xl",
@@ -222,7 +222,7 @@ const CommentsSheet = ({
 
           {/* Header (count comes from parent to avoid duplicating list computation) */}
           <div className="flex items-baseline gap-2 px-4 pb-3 border-b border-zinc-800 flex-none">
-            <h2 className="text-sm font-semibold text-zinc-100">Comments</h2>
+            <h2 className="text-sm font-semibold text-zinc-100">Discussion</h2>
             <span className="text-xs text-zinc-400">{count ?? 0}</span>
           </div>
 
@@ -247,7 +247,7 @@ const CommentsSheet = ({
                 <button
                   type="button"
                   onClick={openComposer}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-center text-sm text-zinc-400 hover:bg-zinc-900/40 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-center text-sm text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                   aria-label="Add a comment"
                 >
                   <FiMessageCircle className="text-base text-zinc-500" />
