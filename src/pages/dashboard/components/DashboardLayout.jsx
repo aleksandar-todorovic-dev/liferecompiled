@@ -21,8 +21,8 @@ import PostFilterBar from "./PostFilterBar";
  * - Subscribes to trash count in real time to keep the Trash tab badge accurate.
  *
  * Responsive behavior:
- * - md+: uses a 2-col grid so controls can align (tabs left, actions/search right).
- * - < md: stacks controls vertically to keep the header compact on mobile.
+ * - < lg: compact stacked toolbar for phone/tablet widths.
+ * - lg+: short product-navigation toolbar with page controls inline/nearby.
  *
  * @returns {JSX.Element}
  */
@@ -33,6 +33,9 @@ const DashboardLayout = () => {
   const isTrashPage = location.pathname.includes("/trash");
   const isMyPostsPage = location.pathname === "/dashboard";
   const isSavedPage = location.pathname.includes("/saved");
+  const isCreatePage = location.pathname === "/dashboard/create";
+  const isEditPage = location.pathname.startsWith("/dashboard/edit/");
+  const isEditorPage = isCreatePage || isEditPage;
 
   const { user } = useContext(AuthContext);
 
@@ -62,145 +65,89 @@ const DashboardLayout = () => {
   }, [user?.uid]);
 
   const dashboardPanel =
-    "rounded-xl border border-zinc-800 bg-zinc-950 p-2.5 shadow-sm sm:rounded-2xl sm:p-4";
+    "rounded-xl border border-zinc-800 bg-zinc-950 px-2.5 py-2 shadow-sm sm:px-3 lg:px-4";
+
+  const savedSortButtonClass = (value) =>
+    `shrink-0 rounded-full border px-3 py-1 text-xs transition
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400
+      focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
+        savedSortDirection === value
+          ? "border-zinc-100 bg-zinc-100 text-zinc-950"
+          : "border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
+      }`;
+
+  const savedSortControls = (
+    <div className="flex flex-wrap items-center gap-2">
+      {/* Saved sort is stored in Outlet context and consumed by SavedPosts page. */}
+      <button
+        type="button"
+        onClick={() => setSavedSortDirection("desc")}
+        className={savedSortButtonClass("desc")}
+      >
+        Recently saved
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setSavedSortDirection("asc")}
+        className={savedSortButtonClass("asc")}
+      >
+        Oldest saved
+      </button>
+    </div>
+  );
+
+  const createButton = isMyPostsPage ? (
+    <NavLink
+      to="/dashboard/create"
+      className="ui-button-primary whitespace-nowrap px-3 py-2 text-sm"
+    >
+      Create post
+    </NavLink>
+  ) : null;
 
   return (
     <div className="pb-2">
       <div className="sticky top-16 z-40">
         <div className="w-full border-b border-zinc-800 bg-zinc-950">
-          <div className="py-1.5 sm:py-3">
+          <div className={isEditorPage ? "py-1 sm:py-1.5" : "py-1.5 sm:py-2"}>
             <div className={dashboardPanel}>
-              {/* md+ uses a 2-col / 2-row grid so Search can live on the far right */}
-              <div className="hidden md:grid md:grid-cols-[minmax(0,1fr)_minmax(320px,28rem)] md:gap-6">
-                {/* Row 1, Col 1 */}
-                <div className="min-w-0">
-                  <div className="hidden lg:block">
-                    <DashboardBreadcrumb />
-                  </div>
-
-                  <div className="mt-1">
-                    <h1 className="text-xl font-semibold text-zinc-100">
+              {/* Phone + tablet: keep a compact stacked toolbar until lg. */}
+              <div className="lg:hidden">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    {!isEditorPage && (
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-300">
+                        Workspace
+                      </p>
+                    )}
+                    <h1
+                      className={
+                        isEditorPage
+                          ? "text-sm font-semibold text-zinc-100"
+                          : "text-base font-semibold text-zinc-100"
+                      }
+                    >
                       Dashboard
                     </h1>
-                    <p className="mt-0.5 text-sm text-zinc-400">
-                      Manage posts, saved items, insights, and recovery tools.
-                    </p>
                   </div>
 
-                  <div className="mt-3">
-                    <DashboardTabs
-                      trashCount={trashCount}
-                      isAdmin={Boolean(user?.isAdmin)}
-                    />
-                  </div>
+                  <div className="hidden sm:block">{createButton}</div>
                 </div>
 
-                {/* Row 1, Col 2 */}
-                <div className="flex items-start justify-end gap-2">
-                  {isMyPostsPage && (
-                    <NavLink
-                      to="/dashboard/create"
-                      className="ui-button-primary whitespace-nowrap"
-                    >
-                      Create post
-                    </NavLink>
-                  )}
-                </div>
-
-                {/* Row 2, Col 1 */}
-                <div className="min-w-0 mt-2 sm:mt-3">
-                  {isTrashPage && (
-                    <TrashFilterBar
-                      filterRange={filterRange}
-                      onFilterChange={setFilterRange}
-                    />
-                  )}
-
-                  {isMyPostsPage && (
-                    <PostFilterBar
-                      activeFilter={filter}
-                      onFilterChange={setFilter}
-                      searchTerm={myPostsSearch}
-                      onSearchChange={setMyPostsSearch}
-                      showDesktopSearch={false}
-                    />
-                  )}
-
-                  {isSavedPage && (
-                    <div className="flex flex-wrap gap-2">
-                      {/* Saved sort is stored in Outlet context and consumed by SavedPosts page. */}
-                      <button
-                        type="button"
-                        onClick={() => setSavedSortDirection("desc")}
-                        className={`px-3 py-1 text-xs rounded-full border transition
-                          focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400
-                          focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
-                            savedSortDirection === "desc"
-                              ? "bg-zinc-100 text-zinc-950 border-zinc-100"
-                              : "border-zinc-800 bg-zinc-950/40 text-zinc-200 hover:bg-zinc-900/40"
-                          }`}
-                      >
-                        Recently saved
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setSavedSortDirection("asc")}
-                        className={`px-3 py-1 text-xs rounded-full border transition
-                          focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400
-                          focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
-                            savedSortDirection === "asc"
-                              ? "bg-zinc-100 text-zinc-950 border-zinc-100"
-                              : "border-zinc-800 bg-zinc-950/40 text-zinc-200 hover:bg-zinc-900/40"
-                          }`}
-                      >
-                        Oldest saved
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Row 2, Col 2 (Search on far right) */}
-                <div className="min-w-0 mt-2 sm:mt-3">
-                  {isMyPostsPage && (
-                    <div className="w-full">
-                      <label htmlFor="my-posts-search-md" className="sr-only">
-                        Search your posts by title
-                      </label>
-                      <input
-                        id="my-posts-search-md"
-                        name="myPostsSearch"
-                        type="text"
-                        value={myPostsSearch}
-                        onChange={(e) => setMyPostsSearch(e.target.value)}
-                        placeholder="Search your posts by title..."
-                        autoComplete="off"
-                        className="ui-input w-full"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Mobile-only bars keep the same controls, stacked for smaller screens. */}
-              <div className="md:hidden">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
-                    Workspace
-                  </p>
-                  <h1 className="text-base font-semibold text-zinc-100">
-                    Dashboard
-                  </h1>
-                </div>
-
-                <div className="mt-2">
+                <div className="mt-1.5">
                   <DashboardTabs
                     trashCount={trashCount}
                     isAdmin={Boolean(user?.isAdmin)}
                   />
                 </div>
 
-                <div className="mt-2 space-y-2">
+                <div
+                  className={[
+                    isEditorPage ? "hidden" : "mt-2",
+                    "space-y-2",
+                  ].join(" ")}
+                >
                   {isTrashPage && (
                     <TrashFilterBar
                       filterRange={filterRange}
@@ -217,45 +164,64 @@ const DashboardLayout = () => {
                     />
                   )}
 
-                  {isSavedPage && (
-                    <div className="flex items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSavedSortDirection("desc")}
-                        className={`shrink-0 px-3 py-1 text-xs rounded-full border transition
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400
-        focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
-          savedSortDirection === "desc"
-            ? "bg-zinc-100 text-zinc-950 border-zinc-100"
-            : "border border-zinc-800 bg-zinc-950/40 text-zinc-200 hover:bg-zinc-900/40"
-        }`}
-                      >
-                        Recently saved
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setSavedSortDirection("asc")}
-                        className={`shrink-0 px-3 py-1 text-xs rounded-full border transition
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400
-        focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
-          savedSortDirection === "asc"
-            ? "bg-zinc-100 text-zinc-950 border-zinc-100"
-            : "border border-zinc-800 bg-zinc-950/40 text-zinc-200 hover:bg-zinc-900/40"
-        }`}
-                      >
-                        Oldest saved
-                      </button>
-                    </div>
-                  )}
+                  {isSavedPage && savedSortControls}
                 </div>
+              </div>
+
+              {/* Desktop/laptop: compact product-navigation toolbar. */}
+              <div className="hidden lg:block">
+                <div className="grid grid-cols-[minmax(0,220px)_minmax(0,1fr)_auto] items-center gap-4">
+                  <div className="min-w-0">
+                    <DashboardBreadcrumb />
+                    <h1 className="mt-0.5 text-base font-semibold text-zinc-100">
+                      Dashboard
+                    </h1>
+                  </div>
+
+                  <DashboardTabs
+                    trashCount={trashCount}
+                    isAdmin={Boolean(user?.isAdmin)}
+                  />
+
+                  <div className="flex min-w-0 items-center justify-end gap-2">
+                    {isTrashPage && (
+                      <div className="max-w-full">
+                        <TrashFilterBar
+                          filterRange={filterRange}
+                          onFilterChange={setFilterRange}
+                        />
+                      </div>
+                    )}
+
+                    {isSavedPage && savedSortControls}
+
+                    {createButton}
+                  </div>
+                </div>
+
+                {isMyPostsPage && (
+                  <div className="mt-2 border-t border-zinc-800 pt-2">
+                    <PostFilterBar
+                      activeFilter={filter}
+                      onFilterChange={setFilter}
+                      searchTerm={myPostsSearch}
+                      onSearchChange={setMyPostsSearch}
+                    />
+                  </div>
+                )}
+
+                {!isEditorPage && !isMyPostsPage && !isTrashPage && !isSavedPage && (
+                  <p className="mt-1 text-xs text-zinc-500">
+                    Manage posts, saved items, insights, and recovery tools.
+                  </p>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="pt-6">
+      <div className={isEditorPage ? "pt-3 sm:pt-4" : "pt-4 sm:pt-5"}>
         {/* Outlet context is the single shared source for dashboard filter/sort UI state. */}
         <Outlet
           context={{
