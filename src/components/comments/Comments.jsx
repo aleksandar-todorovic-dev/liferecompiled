@@ -175,7 +175,7 @@ const Comments = ({
         <div className="flex items-end justify-between gap-3">
           <div className="min-w-0">
             <h2 className="text-base sm:text-lg font-semibold text-zinc-100">
-              Comments
+              Discussion
             </h2>
             <p className="mt-0.5 text-xs text-zinc-500">{totalCount} total</p>
           </div>
@@ -183,7 +183,9 @@ const Comments = ({
       )}
 
       {locked && (
-        <p className={`${hideHeader ? "" : "mt-2"} text-sm text-zinc-400`}>
+        <p
+          className={`${hideHeader ? "" : "mt-3"} rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-100`}
+        >
           This post is archived. Commenting is disabled.
         </p>
       )}
@@ -198,7 +200,7 @@ const Comments = ({
 
       <div className={listWrapperClassName}>
         {slice.length > 0 ? (
-          <div className="divide-y divide-zinc-800/80">
+          <div className="space-y-3">
             {slice.map((comment) => (
               <CommentItem
                 key={comment.id}
@@ -217,7 +219,7 @@ const Comments = ({
             ))}
           </div>
         ) : (
-          <p className="text-sm text-zinc-500 italic">
+          <p className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-6 text-center text-sm text-zinc-500">
             {locked ? "No comments." : "Be the first to comment."}
           </p>
         )}
@@ -227,7 +229,7 @@ const Comments = ({
             <button
               type="button"
               onClick={() => setVisibleCount((prev) => prev + 10)}
-              className="text-sm text-sky-300 hover:text-sky-200 hover:underline underline-offset-4"
+              className="ui-button-secondary"
             >
               Load more
             </button>

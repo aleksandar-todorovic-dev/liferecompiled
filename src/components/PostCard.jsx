@@ -25,6 +25,11 @@ import Avatar from "./common/Avatar";
 import { toggleSavePost } from "../utils/savedPostUtils";
 
 import { DEFAULT_PROFILE_PICTURE } from "../constants/defaults";
+import {
+  getRouteHoverIntentProps,
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../routes/routePreloaders";
 
 /**
  * @component PostCard
@@ -134,7 +139,7 @@ const PostCard = ({
     "ui-card relative w-full overflow-hidden p-4 shadow-sm transition duration-200";
   const cardInteractive = isTrashMode
     ? ""
-    : "cursor-pointer hover:shadow-md hover:scale-[1.01]";
+    : "cursor-pointer hover:border-zinc-700/80 hover:bg-zinc-950/70";
   const cardTrending = post.badges?.trending ? "ring-2 ring-rose-500/40" : "";
 
   return (
@@ -142,6 +147,9 @@ const PostCard = ({
       <div
         className={`${cardBase} ${cardInteractive} ${cardTrending}`}
         onClick={handleClick}
+        {...(!isTrashMode
+          ? getRouteHoverIntentProps(preloadRoutes.postDetails)
+          : {})}
       >
         {/* Top-right actions: keep Info + Delete separated (no overlap) */}
         <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
@@ -374,6 +382,7 @@ const PostCard = ({
             <div className="mt-4">
               <Link
                 to={`/dashboard/edit/${post.id}`}
+                {...getRoutePressIntentProps(preloadRoutes.dashboardEdit)}
                 onClick={(e) => e.stopPropagation()}
                 className="ui-button-primary inline-flex"
               >

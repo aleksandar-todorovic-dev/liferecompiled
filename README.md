@@ -19,6 +19,8 @@ LifeRecompiled demonstrates:
 - deterministic reaction documents plus idempotency markers and a reaction ledger to reduce counter drift
 - soft delete, Trash restore, permanent cascade delete, and scheduled purge
 - resilient UX patterns such as ghost saved cards, Undo rollback, skeletons, modals, mobile comments sheet, and stable toast IDs
+- route-level lazy loading, navigation-aware route prefetching, and a lightweight dark UI baseline
+- controlled production demo content and avatar tooling for screenshots, private preview, and manual review
 - practical security-rule boundaries and honest MVP limitations
 
 ---
@@ -28,7 +30,8 @@ LifeRecompiled demonstrates:
 - Live: [liferecompiled.com](https://liferecompiled.com)
 - Repository: [GitHub](https://github.com/cole92/liferecompiled)
 - Public About page: `/about`
-- Support & feedback route: `/report` — auth-only
+- Support & feedback route: `/report` — public
+- Demo content: controlled seeded production content used for screenshots, private preview, and manual UX review
 
 ---
 
@@ -64,6 +67,7 @@ LifeRecompiled demonstrates:
 - [Backend correctness highlights](#backend-correctness-highlights)
 - [Firestore security rules model](#firestore-security-rules-model)
 - [UX engineering highlights](#ux-engineering-highlights)
+- [Performance and demo-readiness highlights](#performance-and-demo-readiness-highlights)
 - [Known limitations and honest caveats](#known-limitations-and-honest-caveats)
 - [Local development](#local-development)
 - [Deployment notes](#deployment-notes)
@@ -109,13 +113,13 @@ A production-style React/Firebase engineering case study with a community/blog a
 - React + Vite
 - React Router
 - Tailwind CSS
-- Framer Motion
 - Firebase Web SDK
 - react-toastify
 - react-tooltip
 - Recharts
 - dayjs
 - Cloudinary unsigned client upload flow
+- CSS transitions and performance-conscious loading states
 
 ### Backend / platform
 
@@ -143,7 +147,7 @@ A production-style React/Firebase engineering case study with a community/blog a
 - Forgot password flow with neutral reset messaging
 - Email verification gate through global auth state
 - Protected dashboard/account routes
-- Auth-aware action guards for comments, reactions, saves, reports, and dashboard access
+- Auth-aware action guards for comments, reactions, saves, content reports, and dashboard access
 - Admin role derived from user profile data
 
 ### Feed and posts
@@ -207,7 +211,7 @@ A production-style React/Firebase engineering case study with a community/blog a
 - User-created reports for posts/comments
 - Admin report list and target navigation
 - Admin hard-delete path from post details
-- Auth-only support/feedback route at `/report`
+- Public support/feedback route at `/report`
 - Support route builds email/mailto/clipboard payloads with debug context
 
 Moderation is intentionally MVP-light. It is not a full moderation operations system with statuses, assignments, audit logs, or resolved queues.
@@ -290,6 +294,8 @@ Important frontend patterns:
 - UI fallbacks prevent one missing document from breaking an entire screen
 - cursor pagination uses explicit page boundaries
 - toast utilities centralize and de-dupe user feedback
+- route-level lazy loading keeps large route modules out of the initial app load
+- navigation-aware route prefetching warms likely next routes on user intent without making those routes eager
 
 This is not an enterprise architecture, but it is structured enough to show real separation of concerns in a portfolio-scale app.
 
@@ -546,6 +552,89 @@ This should not be presented as a full accessibility audit, but it is a meaningf
 
 ---
 
+## Performance and demo-readiness highlights
+
+### Route-level lazy loading
+
+Major route modules are lazy-loaded so the initial Home/Auth experience does not pay upfront for every feature area.
+
+Lazy-loaded areas include:
+
+- PostDetails
+- About
+- Profile
+- Support / ReportIssue
+- dashboard child routes
+- Stats / Recharts-heavy surfaces
+- Create/Edit editor flows
+- Settings
+- Moderation
+
+Home, Login, Register, and core app infrastructure remain eager so the primary entry points stay immediate and simple.
+
+### Navigation-aware route prefetching
+
+The app also includes navigation-aware route intent prefetching.
+
+This keeps lazy loading active while reducing visible cold-route pauses when a user clearly intends to navigate.
+
+Examples:
+
+- desktop header links can prefetch on hover/focus
+- dashboard tabs can prefetch their target route
+- avatar dropdown items can prefetch visible account/support/about routes
+- post cards and author links can warm PostDetails/Profile routes
+- mobile avoids aggressive prefetching on large scrollable cards to preserve scroll feel
+
+### Lightweight dark UI baseline
+
+The final UI direction intentionally avoids broad glassmorphism and heavy repeated blur/motion patterns.
+
+The design now favors:
+
+- solid dark surfaces
+- subtle borders
+- clear typography hierarchy
+- skeleton/card loading states
+- stable mobile scroll
+- selective accents instead of global glow/blur stacking
+
+Repeated decorative motion and expensive blur-heavy surfaces were reduced after performance testing.
+
+### Saved bookmark loading state
+
+Saved/bookmark controls distinguish between:
+
+```text
+unknown / loading
+saved = true
+saved = false
+```
+
+This prevents saved posts from briefly looking unsaved during hard refresh or initial route load.
+
+The accepted behavior is a neutral loading placeholder followed by the correct saved/unsaved state.
+
+### Controlled production demo data
+
+Production demo content is seeded through controlled local admin scripts rather than manually-created random test data.
+
+The seed approach supports:
+
+- portfolio screenshots
+- private preview
+- Home feed validation
+- Profile validation
+- SavedPosts validation
+- comments/replies validation
+- reaction/Cloud Function validation
+
+Seeded documents are marked so they can be identified and removed later.
+
+Demo avatar update tooling attaches Cloudinary-hosted avatar images to seeded demo users without changing runtime app behavior.
+
+---
+
 ## Known limitations and honest caveats
 
 This project is a portfolio-grade engineering case study, not a finished commercial SaaS product.
@@ -564,6 +653,7 @@ Important current limitations:
 - Automated testing is minimal.
 - Backup automation was documented during development, but backup infrastructure is not managed as infrastructure-as-code in this repository.
 - Cloudinary cleanup is best-effort and only applies when the relevant public ID is available.
+- The Vite main chunk warning is known; route-level lazy loading and intent prefetch are implemented, while manual chunk work is left for later only if it becomes worth the complexity.
 
 These limitations are useful future hardening areas and are intentionally documented rather than hidden.
 
@@ -705,6 +795,8 @@ These are practical notes that came directly from building the project:
 - Firestore indexes become part of the architecture once queries combine filters and sorting.
 - Client-side joins need failure handling; `Promise.allSettled` helps one failed item not break an entire list.
 - Some MVP policies are UI-enforced and would need stricter rules/functions before a production release.
+- Route-level lazy loading improves initial payload, but cold lazy routes still need good loading states or intent prefetching.
+- Loading/unknown boolean states should not be rendered as false states; they need a separate placeholder state.
 - A good README should describe what the code actually proves, not what the app might become later.
 
 ---
@@ -717,7 +809,7 @@ Focused future improvements:
 - Expand tests beyond smoke coverage
 - Improve moderation workflow with statuses/actions if needed
 - Add deeper interview/case-study documentation for reaction correctness
-- Consider code-splitting for the large production bundle
+- Continue monitoring the known Vite chunk warning; route-level lazy loading and intent prefetch are already implemented
 - Review and modernize remaining ESLint/flat-config warnings
 - Improve profile aggregate scalability if the dataset grows
 
@@ -727,6 +819,6 @@ Future ideas should be treated as future improvements, not current features.
 
 ## Author
 
-Created by **Aleksandar Todorovic**.
+Created by **Aleksandar Todorović**.
 
 This project is part of a portfolio focused on React, Firebase, product-quality frontend work, and production-style full-stack engineering practice.

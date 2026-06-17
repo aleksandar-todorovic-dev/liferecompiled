@@ -1,14 +1,34 @@
-import { useContext, useEffect, useState } from "react";
+import { Suspense, useContext, useEffect, useState } from "react";
 import { Outlet, useLocation, NavLink } from "react-router-dom";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
 import { db } from "../../../firebase";
 import { AuthContext } from "../../../context/AuthContext";
 
-import DashboardBreadcrumb from "./DashboardBreadcrumb";
 import DashboardTabs from "./DashboardTabs";
 import TrashFilterBar from "./TrashFilterBar";
 import PostFilterBar from "./PostFilterBar";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../../../routes/routePreloaders";
+
+const DashboardChildFallback = () => (
+  <section
+    className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-sm sm:p-5"
+    role="status"
+    aria-live="polite"
+    aria-busy="true"
+  >
+    <div className="space-y-3">
+      <div className="h-3 w-28 rounded-full bg-zinc-800" />
+      <div className="h-7 w-52 max-w-full rounded-lg bg-zinc-900" />
+      <div className="h-4 w-full max-w-xl rounded bg-zinc-900" />
+    </div>
+
+    <span className="sr-only">Loading dashboard page...</span>
+  </section>
+);
 
 /**
  * @component DashboardLayout
@@ -16,13 +36,14 @@ import PostFilterBar from "./PostFilterBar";
  * Shared layout shell for all `/dashboard/*` routes.
  *
  * Responsibilities:
- * - Renders a sticky header panel with tabs + page-specific controls.
+ * - Renders a sticky mobile/tablet header panel with tabs + page-specific controls.
+ * - On desktop, renders only route-specific controls because global header owns tabs.
  * - Exposes shared dashboard UI state to nested routes via `Outlet` context.
  * - Subscribes to trash count in real time to keep the Trash tab badge accurate.
  *
  * Responsive behavior:
- * - md+: uses a 2-col grid so controls can align (tabs left, actions/search right).
- * - < md: stacks controls vertically to keep the header compact on mobile.
+ * - < lg: compact stacked toolbar for phone/tablet widths.
+ * - lg+: controls-only toolbar for routes that need it; otherwise no generic shell.
  *
  * @returns {JSX.Element}
  */
@@ -33,6 +54,9 @@ const DashboardLayout = () => {
   const isTrashPage = location.pathname.includes("/trash");
   const isMyPostsPage = location.pathname === "/dashboard";
   const isSavedPage = location.pathname.includes("/saved");
+  const isCreatePage = location.pathname === "/dashboard/create";
+  const isEditPage = location.pathname.startsWith("/dashboard/edit/");
+  const isEditorPage = isCreatePage || isEditPage;
 
   const { user } = useContext(AuthContext);
 
@@ -62,141 +86,106 @@ const DashboardLayout = () => {
   }, [user?.uid]);
 
   const dashboardPanel =
-    "ui-card p-2.5 sm:p-4 " +
-    "border-zinc-800/70 " +
-    "bg-gradient-to-b from-sky-500/5 via-zinc-950/20 to-zinc-950/30 " +
-    "ring-sky-200/10";
+    "rounded-xl border border-zinc-800 bg-zinc-950 px-2.5 py-2 shadow-sm sm:px-3 lg:px-4";
+
+  const savedSortButtonClass = (value) =>
+    `shrink-0 rounded-full border px-3 py-1 text-xs transition
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400
+      focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
+        savedSortDirection === value
+          ? "border-zinc-100 bg-zinc-100 text-zinc-950"
+          : "border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
+      }`;
+
+  const savedSortControls = (
+    <div className="flex flex-wrap items-center gap-2">
+      {/* Saved sort is stored in Outlet context and consumed by SavedPosts page. */}
+      <button
+        type="button"
+        onClick={() => setSavedSortDirection("desc")}
+        className={savedSortButtonClass("desc")}
+      >
+        Recently saved
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setSavedSortDirection("asc")}
+        className={savedSortButtonClass("asc")}
+      >
+        Oldest saved
+      </button>
+    </div>
+  );
+
+  const createButton = isMyPostsPage ? (
+    <NavLink
+      to="/dashboard/create"
+      {...getRoutePressIntentProps(preloadRoutes.dashboardCreate)}
+      className="ui-button-primary whitespace-nowrap px-3 py-2 text-sm"
+    >
+      Create post
+    </NavLink>
+  ) : null;
+
+  const desktopControls = isMyPostsPage ? (
+    <PostFilterBar
+      activeFilter={filter}
+      onFilterChange={setFilter}
+      searchTerm={myPostsSearch}
+      onSearchChange={setMyPostsSearch}
+    />
+  ) : isSavedPage ? (
+    <div className="px-1 py-0.5">{savedSortControls}</div>
+  ) : isTrashPage ? (
+    <TrashFilterBar
+      filterRange={filterRange}
+      onFilterChange={setFilterRange}
+    />
+  ) : null;
 
   return (
     <div className="pb-2">
-      <div className="sticky top-16 z-40">
-        <div className="w-full border-b border-zinc-800/80 bg-zinc-950/60 backdrop-blur">
-          <div className="py-2 sm:py-3">
+      <div className="sticky top-16 z-40 lg:hidden">
+        <div className="w-full border-b border-zinc-800 bg-zinc-950">
+          <div className={isEditorPage ? "py-1 sm:py-1.5" : "py-1.5 sm:py-2"}>
             <div className={dashboardPanel}>
-              {/* md+ uses a 2-col / 2-row grid so Search can live on the far right */}
-              <div className="hidden md:grid md:grid-cols-[minmax(0,1fr)_minmax(320px,28rem)] md:gap-6">
-                {/* Row 1, Col 1 */}
-                <div className="min-w-0">
-                  <div className="hidden lg:block">
-                    <DashboardBreadcrumb />
-                  </div>
-
-                  <div className="mt-1.5 sm:mt-2">
-                    <DashboardTabs
-                      trashCount={trashCount}
-                      isAdmin={Boolean(user?.isAdmin)}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 1, Col 2 */}
-                <div className="flex items-center justify-end gap-2">
-                  {/* Email is informational only (truncate prevents header overflow). */}
-                  {user?.email ? (
-                    <span className="text-sm text-zinc-300 max-w-[360px] truncate">
-                      {user.email}
-                    </span>
-                  ) : null}
-
-                  {isMyPostsPage && (
-                    <NavLink
-                      to="/dashboard/create"
-                      className="ui-button-primary"
+              {/* Phone + tablet: keep a compact stacked toolbar until lg. */}
+              <div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    {!isEditorPage && (
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-300">
+                        Workspace
+                      </p>
+                    )}
+                    <h1
+                      className={
+                        isEditorPage
+                          ? "text-sm font-semibold text-zinc-100"
+                          : "text-base font-semibold text-zinc-100"
+                      }
                     >
-                      Create post
-                    </NavLink>
-                  )}
+                      Dashboard
+                    </h1>
+                  </div>
+
+                  <div className="hidden sm:block">{createButton}</div>
                 </div>
 
-                {/* Row 2, Col 1 */}
-                <div className="min-w-0 mt-2 sm:mt-3">
-                  {isTrashPage && (
-                    <TrashFilterBar
-                      filterRange={filterRange}
-                      onFilterChange={setFilterRange}
-                    />
-                  )}
-
-                  {isMyPostsPage && (
-                    <PostFilterBar
-                      activeFilter={filter}
-                      onFilterChange={setFilter}
-                      searchTerm={myPostsSearch}
-                      onSearchChange={setMyPostsSearch}
-                      showDesktopSearch={false}
-                    />
-                  )}
-
-                  {isSavedPage && (
-                    <div className="flex flex-wrap gap-2">
-                      {/* Saved sort is stored in Outlet context and consumed by SavedPosts page. */}
-                      <button
-                        type="button"
-                        onClick={() => setSavedSortDirection("desc")}
-                        className={`px-3 py-1 text-xs rounded-full border transition
-                          focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400
-                          focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
-                            savedSortDirection === "desc"
-                              ? "bg-zinc-100 text-zinc-950 border-zinc-100"
-                              : "border-zinc-800 bg-zinc-950/40 text-zinc-200 hover:bg-zinc-900/40"
-                          }`}
-                      >
-                        Recently saved
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setSavedSortDirection("asc")}
-                        className={`px-3 py-1 text-xs rounded-full border transition
-                          focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400
-                          focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
-                            savedSortDirection === "asc"
-                              ? "bg-zinc-100 text-zinc-950 border-zinc-100"
-                              : "border-zinc-800 bg-zinc-950/40 text-zinc-200 hover:bg-zinc-900/40"
-                          }`}
-                      >
-                        Oldest saved
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Row 2, Col 2 (Search on far right) */}
-                <div className="min-w-0 mt-2 sm:mt-3">
-                  {isMyPostsPage && (
-                    <div className="w-full">
-                      <label htmlFor="my-posts-search-md" className="sr-only">
-                        Search your posts by title
-                      </label>
-                      <input
-                        id="my-posts-search-md"
-                        name="myPostsSearch"
-                        type="text"
-                        value={myPostsSearch}
-                        onChange={(e) => setMyPostsSearch(e.target.value)}
-                        placeholder="Search your posts by title..."
-                        autoComplete="off"
-                        className="ui-input w-full"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Mobile-only bars keep the same controls, stacked for smaller screens. */}
-              <div className="md:hidden">
-                <div className="hidden lg:block">
-                  <DashboardBreadcrumb />
-                </div>
-
-                <div className="mt-1.5 sm:mt-2">
+                <div className="mt-1.5">
                   <DashboardTabs
                     trashCount={trashCount}
                     isAdmin={Boolean(user?.isAdmin)}
                   />
                 </div>
 
-                <div className="mt-2 sm:mt-3 space-y-2">
+                <div
+                  className={[
+                    isEditorPage ? "hidden" : "mt-2",
+                    "space-y-2",
+                  ].join(" ")}
+                >
                   {isTrashPage && (
                     <TrashFilterBar
                       filterRange={filterRange}
@@ -213,37 +202,7 @@ const DashboardLayout = () => {
                     />
                   )}
 
-                  {isSavedPage && (
-                    <div className="flex items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSavedSortDirection("desc")}
-                        className={`shrink-0 px-3 py-1 text-xs rounded-full border transition
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400
-        focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
-          savedSortDirection === "desc"
-            ? "bg-zinc-100 text-zinc-950 border-zinc-100"
-            : "border border-zinc-800 bg-zinc-950/40 text-zinc-200 hover:bg-zinc-900/40"
-        }`}
-                      >
-                        Recently saved
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setSavedSortDirection("asc")}
-                        className={`shrink-0 px-3 py-1 text-xs rounded-full border transition
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400
-        focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
-          savedSortDirection === "asc"
-            ? "bg-zinc-100 text-zinc-950 border-zinc-100"
-            : "border border-zinc-800 bg-zinc-950/40 text-zinc-200 hover:bg-zinc-900/40"
-        }`}
-                      >
-                        Oldest saved
-                      </button>
-                    </div>
-                  )}
+                  {isSavedPage && savedSortControls}
                 </div>
               </div>
             </div>
@@ -251,20 +210,40 @@ const DashboardLayout = () => {
         </div>
       </div>
 
-      <div className="pt-6">
+      {desktopControls && (
+        <div className="sticky top-16 z-40 hidden lg:block">
+          <div className="w-full border-b border-zinc-800 bg-zinc-950">
+            <div className="py-1.5">
+              <div className={dashboardPanel}>{desktopControls}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div
+        className={
+          isEditorPage
+            ? "pt-3 sm:pt-4 lg:pt-0"
+            : desktopControls
+              ? "pt-4 sm:pt-5"
+              : "pt-4 sm:pt-5 lg:pt-0"
+        }
+      >
         {/* Outlet context is the single shared source for dashboard filter/sort UI state. */}
-        <Outlet
-          context={{
-            filterRange,
-            setFilterRange,
-            filter,
-            setFilter,
-            myPostsSearch,
-            setMyPostsSearch,
-            savedSortDirection,
-            setSavedSortDirection,
-          }}
-        />
+        <Suspense fallback={<DashboardChildFallback />}>
+          <Outlet
+            context={{
+              filterRange,
+              setFilterRange,
+              filter,
+              setFilter,
+              myPostsSearch,
+              setMyPostsSearch,
+              savedSortDirection,
+              setSavedSortDirection,
+            }}
+          />
+        </Suspense>
       </div>
     </div>
   );

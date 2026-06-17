@@ -42,7 +42,7 @@ import { FOCUS_RING } from "../constants/uiClasses";
  * - Builds a "Top 3 posts" list by sorting posts based on reactions total
  *
  * UI:
- * - Hero card: avatar, name, badges, email, member since, stats, bio, highlights
+ * - Hero card: avatar, name, badges, member since, stats, bio, highlights
  * - Top posts card: top 3 most reacted posts (or empty / loading states)
  *
  * Notes:
@@ -305,8 +305,7 @@ const Profile = () => {
     ? dayjs(userData.createdAt.toDate()).format("DD MMM YYYY")
     : "---";
 
-  const displayName = userData?.name || "Unknown author";
-  const displayEmail = userData?.email || "";
+  const displayName = userData?.name || "Community member";
 
   /**
    * Simple engagement heuristic: reactions per post.
@@ -317,32 +316,33 @@ const Profile = () => {
       ? Math.round((reactionsCount / postCount) * 10) / 10
       : 0;
 
-  return (
-    <div className="w-full px-2 max-[360px]:px-1 sm:px-6 lg:px-10 2xl:px-16 py-5 sm:py-6">
-      <div className="flex flex-col gap-5 sm:gap-6">
-        {/* HERO */}
-        <section className="ui-card relative overflow-hidden p-3 sm:p-6 lg:p-8">
-          {/* Subtle background glow */}
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_10%_0%,rgba(56,189,248,0.10),transparent_55%),radial-gradient(100%_70%_at_90%_10%,rgba(34,197,94,0.08),transparent_55%)]" />
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-500/20 to-transparent" />
-          </div>
+  const isTopPostsMetricLoading = isLoadingTop3;
+  const isEngagementLoading =
+    isCounting ||
+    isCountingReactions ||
+    postCount == null ||
+    reactionsCount == null;
 
-          <div className="relative grid gap-5 sm:gap-6 2xl:grid-cols-12 2xl:items-start">
+  return (
+    <div className="w-full px-2 sm:px-6 lg:px-10 2xl:px-16 py-4 sm:py-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 sm:gap-6">
+        {/* HERO */}
+        <section className="ui-card overflow-hidden p-3 sm:p-6 lg:p-7">
+          <div className="grid gap-5 lg:grid-cols-[minmax(260px,360px)_minmax(0,1fr)] lg:items-stretch xl:grid-cols-[minmax(280px,380px)_minmax(0,1fr)_minmax(220px,280px)]">
             {/* Left: avatar + identity + stats */}
-            <div className="2xl:col-span-4">
-              <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-5">
+            <div>
+              <div className="flex items-start gap-4">
                 {/* Avatar */}
                 <div className="relative shrink-0">
                   {loadingUser ? (
-                    <SkeletonCircle size={144} />
+                    <SkeletonCircle size={112} />
                   ) : (
                     <>
                       {/* xs */}
                       <div className="sm:hidden">
                         <Avatar
                           src={avatarSrc}
-                          size={112}
+                          size={88}
                           zoomable
                           badge={isTopContributor}
                           alt="Profile picture"
@@ -353,7 +353,7 @@ const Profile = () => {
                       <div className="hidden sm:block">
                         <Avatar
                           src={avatarSrc}
-                          size={144}
+                          size={112}
                           zoomable
                           badge={isTopContributor}
                           alt="Profile picture"
@@ -366,9 +366,8 @@ const Profile = () => {
                 {/* Identity */}
                 <div
                   className={[
-                    "min-w-0 flex-1 text-center",
-                    "sm:flex sm:flex-col sm:items-center sm:text-center",
-                    "2xl:items-start 2xl:text-left",
+                    "min-w-0 flex-1",
+                    "flex flex-col items-start text-left",
                   ].join(" ")}
                 >
                   {loadingUser ? (
@@ -381,7 +380,7 @@ const Profile = () => {
                     <>
                       <h1
                         className={[
-                          "min-w-0 max-w-full text-xl sm:text-2xl font-semibold text-zinc-100",
+                          "min-w-0 max-w-full text-xl sm:text-2xl font-semibold leading-tight text-zinc-100",
                           "[overflow-wrap:anywhere] line-clamp-2",
                           "sm:line-clamp-none sm:truncate sm:[overflow-wrap:normal]",
                         ].join(" ")}
@@ -390,9 +389,9 @@ const Profile = () => {
                         {displayName}
                       </h1>
 
-                      <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-center 2xl:justify-start">
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
                         {isOwnProfile ? (
-                          <span className="rounded-full border border-zinc-800/90 bg-zinc-950/40 px-2.5 py-1 text-[11px] font-medium text-zinc-300">
+                          <span className="rounded-full border border-zinc-800 bg-zinc-950 px-2.5 py-1 text-[11px] font-medium text-zinc-300">
                             You
                           </span>
                         ) : null}
@@ -401,7 +400,7 @@ const Profile = () => {
                           <button
                             type="button"
                             onClick={() => setShowTopContributorModal(true)}
-                            className={`inline-flex items-center gap-1 rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-[11px] font-semibold text-amber-200 hover:bg-amber-400/15 transition ${FOCUS_RING}`}
+                            className={`inline-flex items-center gap-1 rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-[11px] font-semibold text-amber-200 hover:bg-amber-400/15 ${FOCUS_RING}`}
                             title="Top Contributor"
                             aria-label="Open Top Contributor badge info"
                           >
@@ -410,7 +409,7 @@ const Profile = () => {
                           </button>
                         ) : (
                           <span
-                            className="inline-flex items-center gap-1 rounded-full border border-zinc-800/90 bg-zinc-950/30 px-2.5 py-1 text-[11px] font-medium text-zinc-300"
+                            className="inline-flex items-center gap-1 rounded-full border border-zinc-800 bg-zinc-950 px-2.5 py-1 text-[11px] font-medium text-zinc-300"
                             title="Community member"
                           >
                             <span className="inline-block h-1.5 w-1.5 rounded-full bg-zinc-500" />
@@ -418,13 +417,6 @@ const Profile = () => {
                           </span>
                         )}
                       </div>
-
-                      <p
-                        className="mt-2 text-sm text-zinc-400 [overflow-wrap:anywhere]"
-                        title={displayEmail}
-                      >
-                        {displayEmail}
-                      </p>
 
                       <p className="mt-2 text-xs text-zinc-500">
                         Member since:{" "}
@@ -450,9 +442,14 @@ const Profile = () => {
             </div>
 
             {/* Bio */}
-            <div className="2xl:col-span-5">
-              <div className="rounded-2xl border border-zinc-800/80 bg-zinc-950/20 p-3 sm:p-5">
-                <h2 className="text-sm font-semibold text-zinc-100">Bio</h2>
+            <div>
+              <div className="h-full rounded-xl bg-zinc-900 p-3 sm:rounded-2xl sm:border sm:border-zinc-800 sm:bg-zinc-950 sm:p-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                  Author bio
+                </p>
+                <h2 className="mt-1 text-base font-semibold text-zinc-100">
+                  About {isOwnProfile ? "you" : "this author"}
+                </h2>
 
                 {loadingUser ? (
                   <div className="mt-3 space-y-2">
@@ -467,14 +464,19 @@ const Profile = () => {
             </div>
 
             {/* Highlights */}
-            <div className="2xl:col-span-3">
-              <div className="rounded-2xl border border-zinc-800/80 bg-zinc-950/20 p-3 sm:p-5">
+            <div>
+              <div className="h-full rounded-xl bg-zinc-900 p-3 sm:rounded-2xl sm:border sm:border-zinc-800 sm:bg-zinc-950 sm:p-5">
                 <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-sm font-semibold text-zinc-100">
-                    Highlights
-                  </h3>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                      Contributions
+                    </p>
+                    <h3 className="mt-1 text-base font-semibold text-zinc-100">
+                      Highlights
+                    </h3>
+                  </div>
 
-                  <span className="2xl:hidden rounded-full border border-zinc-800 bg-zinc-950/30 px-2.5 py-1 text-[11px] text-zinc-400">
+                  <span className="rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-[11px] text-zinc-400">
                     Public profile
                   </span>
                 </div>
@@ -487,19 +489,27 @@ const Profile = () => {
 
                   <div className="flex items-center justify-between gap-3">
                     <span>Top posts</span>
-                    <span className="text-zinc-200">{top3?.length || 0}/3</span>
+                    <span className="text-zinc-200">
+                      {isTopPostsMetricLoading ? (
+                        <SkeletonLine as="span" w="w-10" h="h-4" />
+                      ) : errorTop3 ? (
+                        "Unavailable"
+                      ) : (
+                        `${top3?.length || 0}/3`
+                      )}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-3">
                     <span>Engagement</span>
-                    <span className="text-zinc-200">{engagement} / post</span>
+                    <span className="text-zinc-200">
+                      {isEngagementLoading ? (
+                        <SkeletonLine as="span" w="w-20" h="h-4" />
+                      ) : (
+                        `${engagement} per post`
+                      )}
+                    </span>
                   </div>
-                </div>
-
-                <div className="mt-4 hidden 2xl:flex justify-center">
-                  <span className="rounded-full border border-zinc-800 bg-zinc-950/30 px-2.5 py-1 text-[11px] text-zinc-400">
-                    Public profile
-                  </span>
                 </div>
               </div>
             </div>
@@ -517,23 +527,22 @@ const Profile = () => {
         )}
 
         {/* TOP POSTS */}
-        <section className="ui-card relative overflow-hidden p-3 sm:p-6 lg:p-8">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-500/15 to-transparent" />
-          </div>
-
-          <div className="relative flex flex-wrap items-end justify-between gap-3">
+        <section className="ui-card overflow-hidden p-3 sm:p-6 lg:p-7">
+          <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-zinc-100">
+              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                Contribution highlights
+              </p>
+              <h2 className="mt-1 text-lg sm:text-xl font-semibold text-zinc-100">
                 Top posts
               </h2>
               <p className="mt-1 text-sm text-zinc-400">
-                Most reacted posts by this author (up to 3).
+                Most reacted posts by {isOwnProfile ? "you" : "this author"}.
               </p>
             </div>
           </div>
 
-          <div className="relative mt-6">
+          <div className="mt-5">
             {isLoadingTop3 && <SkeletonGrid count={3} />}
 
             {errorTop3 && (
@@ -543,7 +552,7 @@ const Profile = () => {
             )}
 
             {!isLoadingTop3 && !errorTop3 && top3.length === 0 && (
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-950/20 p-8 text-center">
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 text-center">
                 <p className="text-sm text-zinc-400">
                   This author has no public posts yet.
                 </p>
@@ -551,7 +560,7 @@ const Profile = () => {
             )}
 
             {!isLoadingTop3 && !errorTop3 && top3.length > 0 && (
-              <div className="grid gap-4 lg:grid-cols-3 lg:auto-rows-fr">
+              <div className="grid gap-3 lg:grid-cols-3 lg:auto-rows-fr">
                 {top3.map((post) => (
                   <TopPostCard key={post.id} post={post} />
                 ))}

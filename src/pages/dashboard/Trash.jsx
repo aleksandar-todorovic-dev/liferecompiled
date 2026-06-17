@@ -25,7 +25,6 @@ import { DEFAULT_PROFILE_PICTURE } from "../../constants/defaults";
 import { showErrorToast, showSuccessToast } from "../../utils/toastUtils";
 import ConfirmModal from "../../components/modals/ConfirmModal";
 import { getDaysLeft } from "../../utils/dateUtils";
-import { motion, AnimatePresence } from "framer-motion";
 
 // Components
 import PostCardTrash from "../../components/PostCardTrash";
@@ -101,13 +100,13 @@ const Trash = () => {
       }
     : null;
 
-  const gridBase = "grid gap-4 grid-cols-1 lg:grid-cols-2";
+  const gridBase = "grid grid-cols-1 gap-3 sm:gap-4";
 
   // IMPORTANT:
   // Dashboard layout likely already wraps the Outlet with `ui-shell`,
   // so we avoid adding another shell here to prevent a double/narrow wrapper.
   const shell = "w-full pb-2";
-  const wrap = "space-y-6 py-2";
+  const wrap = "space-y-5 py-2";
 
   useEffect(() => {
     let canceled = false;
@@ -346,14 +345,61 @@ const Trash = () => {
   // EmptyState: show only when we are done loading and there is no next page.
   const shouldShowEmpty = !isLoading && deletedPosts.length === 0 && !hasMore;
 
-  const emptyMessage = filterRange
-    ? "No posts match this filter."
-    : "You haven't deleted any posts yet.";
+  const emptyState = filterRange
+    ? {
+        title: "No posts match this filter",
+        description: "Try a different time range.",
+      }
+    : {
+        title: "Trash is empty",
+        description:
+          "Deleted posts will appear here before they are permanently removed.",
+      };
+
+  const filterLabel =
+    filterRange === "0-10"
+      ? "0-10 days left"
+      : filterRange === "11-20"
+        ? "11-20 days left"
+        : filterRange === "21-30"
+          ? "21-30 days left"
+          : "All deleted posts";
 
   return (
     <div className={shell}>
       <div className={wrap}>
-        {shouldShowEmpty && <EmptyState message={emptyMessage} />}
+        <header className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
+                Trash
+              </p>
+              <h1 className="mt-1 text-2xl font-semibold text-zinc-100">
+                Recovery workspace
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-400">
+                Restore deleted posts before the retention window closes, or
+                permanently remove items you no longer need.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap sm:justify-end">
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+                <p className="text-xs text-zinc-500">Showing</p>
+                <p className="font-semibold text-zinc-100">
+                  {isLoading ? "..." : deletedPosts.length}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+                <p className="text-xs text-zinc-500">Filter</p>
+                <p className="font-semibold text-zinc-100">{filterLabel}</p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {shouldShowEmpty && <EmptyState {...emptyState} />}
 
         {isLoading && (
           <div className={gridBase} role="status" aria-live="polite">
@@ -366,37 +412,29 @@ const Trash = () => {
         {!isLoading && filteredPosts.length > 0 && (
           <>
             <div className={gridBase}>
-              <AnimatePresence>
-                {filteredPosts.map((post) => {
-                  // Derived display value for the retention countdown UI.
-                  const daysLeft = post.deletedAt
-                    ? getDaysLeft(post.deletedAt)
-                    : null;
+              {filteredPosts.map((post) => {
+                // Derived display value for the retention countdown UI.
+                const daysLeft = post.deletedAt
+                  ? getDaysLeft(post.deletedAt)
+                  : null;
 
-                  return (
-                    <motion.div
-                      key={post.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                    >
-                      <PostCardTrash
-                        post={post}
-                        daysLeft={daysLeft}
-                        onRestore={() => {
-                          setSelectedPostId(post.id);
-                          setRestoreModalOpen(true);
-                        }}
-                        onDeletePermanently={() => {
-                          setPostIdToDelete(post.id);
-                          setDeleteModalOpen(true);
-                        }}
-                      />
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+                return (
+                  <div key={post.id}>
+                    <PostCardTrash
+                      post={post}
+                      daysLeft={daysLeft}
+                      onRestore={() => {
+                        setSelectedPostId(post.id);
+                        setRestoreModalOpen(true);
+                      }}
+                      onDeletePermanently={() => {
+                        setPostIdToDelete(post.id);
+                        setDeleteModalOpen(true);
+                      }}
+                    />
+                  </div>
+                );
+              })}
             </div>
 
             {isLoadingMore && (
@@ -437,11 +475,11 @@ const Trash = () => {
 
       <ConfirmModal
         isOpen={restoreModalOpen}
-        title="Restore Post"
-        message="Are you sure you want to restore this post?"
-        confirmText="Restore"
-        confirmButtonClass="rounded-lg bg-emerald-500/15 text-emerald-200 ring-1 ring-emerald-500/25 hover:bg-emerald-500/25 hover:scale-105 transition"
-        cancelButtonClass="rounded-lg bg-zinc-800/70 text-zinc-100 ring-1 ring-zinc-700/60 hover:bg-zinc-800 hover:scale-105 transition"
+        title="Restore post"
+        message="Restore this post to your active posts?"
+        confirmText="Restore post"
+        confirmButtonClass="ui-button justify-center bg-emerald-600 text-zinc-50 hover:bg-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+        cancelButtonClass="ui-button-secondary justify-center"
         onCancel={() => {
           setRestoreModalOpen(false);
           setSelectedPostId(null);
@@ -455,11 +493,9 @@ const Trash = () => {
 
       <ConfirmModal
         isOpen={deleteModalOpen}
-        title="Delete Post Permanently"
+        title="Delete post permanently"
         message="Are you sure you want to permanently delete this post? This action cannot be undone."
-        confirmText="Delete"
-        confirmButtonClass="rounded-lg bg-rose-500/15 text-rose-200 ring-1 ring-rose-500/25 hover:bg-rose-500/25 hover:scale-105 transition"
-        cancelButtonClass="rounded-lg bg-zinc-800/70 text-zinc-100 ring-1 ring-zinc-700/60 hover:bg-zinc-800 hover:scale-105 transition"
+        confirmText="Delete permanently"
         onCancel={() => {
           setDeleteModalOpen(false);
           setPostIdToDelete(null);

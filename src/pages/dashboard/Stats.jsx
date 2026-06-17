@@ -16,8 +16,8 @@ import { db } from "../../firebase";
 import { AuthContext } from "../../context/AuthContext";
 import { normalizeMonthlyArray } from "../../utils/statsUtils";
 
-import Spinner from "../../components/Spinner";
 import CustomTooltip from "./components/CustomTooltip";
+import EmptyState from "./components/EmptyState";
 
 /**
  * @component Stats
@@ -83,6 +83,50 @@ const monthTick = (v) => {
   };
   return map[m] ?? v;
 };
+
+const StatsLoadingSkeleton = () => (
+  <section className="space-y-5 py-2 text-zinc-100" aria-busy="true">
+    <header className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-sm sm:p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="space-y-3">
+          <div className="h-3 w-16 rounded-full bg-zinc-800" />
+          <div className="h-8 w-52 max-w-full rounded-lg bg-zinc-900" />
+          <div className="h-4 w-full max-w-xl rounded bg-zinc-900" />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 text-sm">
+          {[0, 1, 2].map((item) => (
+            <div
+              key={item}
+              className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2"
+            >
+              <div className="h-3 w-14 rounded bg-zinc-800" />
+              <div className="mt-2 h-5 w-8 rounded bg-zinc-800" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </header>
+
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {[0, 1].map((item) => (
+        <div
+          key={item}
+          className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-sm sm:p-5"
+        >
+          <div className="mb-4 space-y-2">
+            <div className="h-5 w-40 rounded bg-zinc-900" />
+            <div className="h-4 w-56 max-w-full rounded bg-zinc-900" />
+          </div>
+
+          <div className="h-[240px] rounded-xl border border-zinc-800 bg-zinc-900" />
+        </div>
+      ))}
+    </div>
+
+    <span className="sr-only">Loading statistics...</span>
+  </section>
+);
 
 const Stats = () => {
   const { user } = useContext(AuthContext);
@@ -166,10 +210,9 @@ const Stats = () => {
     if (user) fetchUserStats();
   }, [user]);
 
-  const wrapperClass = "space-y-6 py-2 text-zinc-100";
+  const wrapperClass = "space-y-5 py-2 text-zinc-100";
   const cardClass =
-    "ui-card rounded-2xl border border-zinc-800/70 bg-zinc-950/40 " +
-    "ring-1 ring-zinc-100/5 shadow-sm overflow-hidden p-4 sm:p-5";
+    "rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-sm sm:p-5";
 
   const pieTooltipProps = useMemo(
     () => ({
@@ -188,40 +231,83 @@ const Stats = () => {
 
   // Loading + auth guard: keep the dashboard consistent with other pages.
   if (!user || isLoading) {
-    return <Spinner message="Loading statistics..." />;
-  }
-
-  // If there is no monthly data, show a friendly empty state instead of a blank chart.
-  if (postsPerMonth.length === 0) {
-    return (
-      <div className="p-5 text-center text-zinc-100">
-        <h2 className="mb-2 text-2xl font-semibold">No data yet</h2>
-        <p className="text-zinc-400">
-          Once you create posts, your monthly activity will appear here.
-        </p>
-      </div>
-    );
+    return <StatsLoadingSkeleton />;
   }
 
   const restoredValue = pieData?.[0]?.value ?? 0;
   const deletedValue = pieData?.[1]?.value ?? 0;
+  const totalPostsTracked = postsPerMonth.reduce(
+    (sum, item) => sum + (item.count || 0),
+    0,
+  );
+
+  // If there is no monthly data, show a friendly empty state instead of a blank chart.
+  if (postsPerMonth.length === 0) {
+    return (
+      <div className={wrapperClass}>
+        <header className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-sm sm:p-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+            Stats
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold text-zinc-100">
+            Insights overview
+          </h1>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-400">
+            Posting and recovery activity will appear here after you create and
+            manage posts.
+          </p>
+        </header>
+
+        <EmptyState
+          title="No activity yet"
+          description="Your stats will appear after you create and interact with posts."
+        />
+      </div>
+    );
+  }
 
   return (
     <section className={wrapperClass}>
-      <div className={cardClass}>
-        <h1 className="text-xl sm:text-2xl font-semibold">
-          Your Posting Activity
-        </h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Monthly posts + restore/delete ratio.
-        </p>
-      </div>
+      <header className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+              Stats
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold text-zinc-100">
+              Insights overview
+            </h1>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-400">
+              A compact view of posting cadence and Trash recovery decisions.
+            </p>
+          </div>
 
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+          <div className="grid grid-cols-3 gap-2 text-sm">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+              <p className="text-xs text-zinc-500">Posts</p>
+              <p className="font-semibold text-zinc-100">{totalPostsTracked}</p>
+            </div>
+
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+              <p className="text-xs text-zinc-500">Restored</p>
+              <p className="font-semibold text-zinc-100">{restoredValue}</p>
+            </div>
+
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+              <p className="text-xs text-zinc-500">Deleted</p>
+              <p className="font-semibold text-zinc-100">{deletedValue}</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Bar chart */}
         <div className={cardClass}>
           <div className="mb-3">
-            <h2 className="text-base font-semibold">Posts per month</h2>
+            <h2 className="text-base font-semibold text-zinc-100">
+              Posts per month
+            </h2>
             <p className="text-sm text-zinc-400">
               Highlighted: most active month.
             </p>
@@ -298,7 +384,9 @@ const Stats = () => {
         {/* Pie chart */}
         <div className={cardClass}>
           <div className="mb-3">
-            <h2 className="text-base font-semibold">Restore vs Delete ratio</h2>
+            <h2 className="text-base font-semibold text-zinc-100">
+              Restore vs delete ratio
+            </h2>
             <p className="text-sm text-zinc-400">
               Based on your Trash actions.
             </p>
@@ -340,7 +428,7 @@ const Stats = () => {
               </div>
 
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2">
+                <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
                   <span className="flex items-center gap-2 text-sm text-zinc-200">
                     <span className="h-2 w-2 rounded-full bg-emerald-400" />
                     Restored
@@ -350,7 +438,7 @@ const Stats = () => {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2">
+                <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
                   <span className="flex items-center gap-2 text-sm text-zinc-200">
                     <span className="h-2 w-2 rounded-full bg-rose-400" />
                     Deleted

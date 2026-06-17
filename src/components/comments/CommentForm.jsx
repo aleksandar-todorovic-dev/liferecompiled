@@ -119,7 +119,7 @@ const CommentForm = ({
     try {
       // Auth gate: keep UX friendly (toast), avoid throwing UI-level errors.
       if (!user) {
-        showInfoToast("Please login to comment 😊", {
+        showInfoToast("Please log in to comment.", {
           toastId: COMMENT_AUTH_TOAST_ID,
         });
         return;
@@ -195,7 +195,7 @@ const CommentForm = ({
         ref={textareaRef}
         placeholder={parentId ? "Write a reply..." : "Add a comment..."}
         className={[
-          "w-full rounded-xl border border-zinc-800 bg-zinc-950/40 p-3 text-zinc-100 placeholder:text-zinc-500",
+          "w-full rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-zinc-100 placeholder:text-zinc-500",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
           "resize-none max-h-40 overflow-y-auto",
           isSubmitting ? "opacity-80" : "",
@@ -222,7 +222,7 @@ const CommentForm = ({
       {showColdStartHint && (
         <p className="mt-2 text-xs text-zinc-400">
           Heads up: the first comment may take a few seconds while the server
-          wakes up. Thanks for your patience 🙂
+          wakes up. Thanks for your patience.
         </p>
       )}
 

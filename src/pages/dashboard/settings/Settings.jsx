@@ -5,7 +5,14 @@ import { useState, useEffect, useContext, useMemo } from "react";
 import { Link } from "react-router-dom";
 
 import EditProfileForm from "./EditProfileForm";
+import Avatar from "../../../components/common/Avatar";
 import { SkeletonLine } from "../../../components/ui/skeletonLoader/SkeletonBits";
+import EmptyState from "../components/EmptyState";
+import { DEFAULT_PROFILE_PICTURE } from "../../../constants/defaults";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../../../routes/routePreloaders";
 
 /**
  * @component Settings
@@ -38,11 +45,9 @@ const Settings = () => {
     "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 " +
     "focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 rounded-md";
 
-  // Feed-like card tint (keeps Settings aligned with dashboard/feed visuals).
+  // Solid settings surface; keeps the private editor calm and distinct from public profile.
   const feedCardSkin =
-    "overflow-hidden border-zinc-800/70 " +
-    "bg-gradient-to-b from-sky-500/10 via-zinc-950/20 to-zinc-950/30 " +
-    "ring-sky-200/10";
+    "overflow-hidden border-zinc-800 bg-zinc-950";
 
   useEffect(() => {
     // UI-only state: reset expanded bio when switching user or when bio changes.
@@ -85,7 +90,7 @@ const Settings = () => {
 
         setUserData(null);
         setStatus("error");
-        setErrorMsg("Failed to load user data. Please refresh and try again.");
+        setErrorMsg("We couldn't load your settings. Please try again later.");
       }
     };
 
@@ -113,9 +118,12 @@ const Settings = () => {
   if (isCheckingAuth) return null;
 
   return (
-    <div className="w-full px-3 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-screen-2xl my-6 sm:my-10">
-        <header className="mb-6 sm:mb-8 pb-6 sm:pb-7 border-b border-zinc-800/70">
+    <div className="w-full px-2 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-6xl my-5 sm:my-8">
+        <header className="mb-5 sm:mb-6 pb-5 border-b border-zinc-800/70">
+          <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+            Private workspace
+          </p>
           <h1 className="text-2xl sm:text-3xl font-semibold text-zinc-100">
             Settings
           </h1>
@@ -124,10 +132,10 @@ const Settings = () => {
           </p>
         </header>
 
-        <div className="grid gap-6 lg:gap-10 xl:gap-12 lg:grid-cols-[minmax(380px,460px)_minmax(0,1fr)]">
+        <div className="grid gap-4 lg:gap-8 lg:grid-cols-[minmax(320px,380px)_minmax(0,1fr)]">
           {/* LEFT COLUMN (on mobile goes below) */}
-          <aside className="space-y-6 lg:sticky lg:top-24 self-start order-2 lg:order-1">
-            <div className={`ui-card ${feedCardSkin} p-4 sm:p-6`}>
+          <aside className="space-y-5 lg:sticky lg:top-24 self-start order-2 lg:order-1">
+            <div className={`ui-card ${feedCardSkin} p-3 sm:p-5`}>
               <h2 className="text-base font-semibold text-zinc-100">
                 Profile preview
               </h2>
@@ -145,8 +153,23 @@ const Settings = () => {
                 </div>
               ) : (
                 <div className="mt-5">
-                  <div className="text-sm font-semibold text-zinc-100 truncate">
-                    {displayName}
+                  <div className="flex items-start gap-3">
+                    <Avatar
+                      src={userData?.profilePicture || DEFAULT_PROFILE_PICTURE}
+                      size={56}
+                      zoomable={false}
+                      alt="Profile preview picture"
+                    />
+
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-semibold text-zinc-100">
+                        {displayName}
+                      </div>
+
+                      <p className="mt-0.5 text-xs text-zinc-500">
+                        Public author identity
+                      </p>
+                    </div>
                   </div>
 
                   {bio ? (
@@ -179,7 +202,7 @@ const Settings = () => {
                   )}
 
                   {!!viewProfileId && (
-                    <div className="mt-4">
+                    <div className="mt-4 border-t border-zinc-800 pt-4">
                       <Link
                         to={`/profile/${viewProfileId}`}
                         className={linkBase}
@@ -192,21 +215,21 @@ const Settings = () => {
               )}
             </div>
 
-            <div className={`ui-card ${feedCardSkin} p-4 sm:p-6`}>
+            <div className={`ui-card ${feedCardSkin} p-3 sm:p-6`}>
               <h2 className="text-base font-semibold text-zinc-100">Account</h2>
               <p className="mt-1 text-sm text-zinc-400">
                 Read-only details from authentication.
               </p>
 
               <div className="mt-4 space-y-3 text-sm">
-                <div className="flex items-center justify-between gap-3">
+                <div className="grid gap-1 sm:flex sm:items-center sm:justify-between sm:gap-3">
                   <span className="text-zinc-500">Email</span>
-                  <span className="text-zinc-200 truncate">
+                  <span className="min-w-0 truncate text-zinc-200">
                     {user?.email || "—"}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between gap-3">
+                <div className="grid gap-1 sm:flex sm:items-center sm:justify-between sm:gap-3">
                   <span className="text-zinc-500">User ID</span>
                   <span className="text-zinc-200">
                     {uid ? `${uid.slice(0, 8)}...` : "—"}
@@ -215,7 +238,11 @@ const Settings = () => {
               </div>
 
               <div className="mt-4 pt-4 border-t border-zinc-800 flex flex-wrap gap-3">
-                <Link to="/dashboard" className={linkBase}>
+                <Link
+                  to="/dashboard"
+                  {...getRoutePressIntentProps(preloadRoutes.dashboardMyPosts)}
+                  className={linkBase}
+                >
                   Back to dashboard
                 </Link>
               </div>
@@ -223,9 +250,9 @@ const Settings = () => {
           </aside>
 
           {/* RIGHT COLUMN (on mobile goes first) */}
-          <section className="space-y-6 order-1 lg:order-2">
-            <div className={`ui-card ${feedCardSkin} p-4 sm:p-8`}>
-              <div className="mb-6">
+          <section className="space-y-4 order-1 lg:order-2 lg:space-y-6">
+            <div className={`ui-card ${feedCardSkin} p-3 sm:p-6`}>
+              <div className="mb-5">
                 <h2 className="text-xl font-semibold text-zinc-100">
                   Edit profile
                 </h2>
@@ -249,17 +276,19 @@ const Settings = () => {
               )}
 
               {status === "empty" && (
-                <p className="text-zinc-400">No user data found.</p>
+                <EmptyState
+                  title="Settings unavailable"
+                  description="We couldn't find profile settings for this account."
+                  surface={false}
+                />
               )}
 
               {status === "error" && (
-                <div className="space-y-2">
-                  <p className="text-red-300">{errorMsg}</p>
-                  {/* Helpful debug hint without exposing implementation details to end users. */}
-                  <p className="text-sm text-zinc-500">
-                    Tip: check Firestore rules for the users collection.
-                  </p>
-                </div>
+                <EmptyState
+                  title="Settings could not be loaded"
+                  description={errorMsg}
+                  surface={false}
+                />
               )}
             </div>
           </section>

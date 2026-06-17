@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { useLocation, NavLink } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import PropTypes from "prop-types";
 import { doc, onSnapshot } from "firebase/firestore";
 
@@ -8,13 +7,15 @@ import { db } from "../firebase";
 import { DEFAULT_PROFILE_PICTURE } from "../constants/defaults";
 import ShieldIcon from "./ui/ShieldIcon";
 import Avatar from "./common/Avatar";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../routes/routePreloaders";
 
 import {
   cx,
   FOCUS_RING,
-  SURFACE_PANEL,
   SURFACE_PANEL_INNER,
-  SURFACE_PANEL_ARROW,
 } from "../constants/uiClasses";
 
 /**
@@ -37,6 +38,9 @@ const AvatarDropdown = ({ user, logout, isLoggingOut }) => {
   const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
   const dropdownRef = useRef(null);
+  const isDashboardRoute =
+    location.pathname === "/dashboard" ||
+    location.pathname.startsWith("/dashboard/");
 
   // Normalize user id shape across auth sources (uid/id/userId)
   const userId = user?.uid || user?.id || user?.userId;
@@ -102,7 +106,7 @@ const AvatarDropdown = ({ user, logout, isLoggingOut }) => {
   }, [showMenu]);
 
   const linkBase =
-    "block w-full px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900/50 hover:text-zinc-100 transition " +
+    "block w-full px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900/50 hover:text-zinc-100 transition sm:px-4 " +
     "rounded-lg " +
     FOCUS_RING;
 
@@ -113,12 +117,12 @@ const AvatarDropdown = ({ user, logout, isLoggingOut }) => {
     liveProfilePicture || user?.profilePicture || DEFAULT_PROFILE_PICTURE;
 
   const dropdownSurfaceClass = cx(
-    SURFACE_PANEL,
     SURFACE_PANEL_INNER,
-    "relative",
-    "ring-1 ring-sky-200/10",
-    "border-sky-500/15",
+    "relative border border-zinc-800 bg-zinc-950 shadow-lg ring-1 ring-sky-200/10",
   );
+
+  const dropdownArrowClass =
+    "absolute -top-1 right-5 z-0 h-3 w-3 rotate-45 border-l border-t border-zinc-800 bg-zinc-950";
 
   const dividerClass = "my-1 border-t border-zinc-800/80";
 
@@ -146,101 +150,98 @@ const AvatarDropdown = ({ user, logout, isLoggingOut }) => {
         )}
       </button>
 
-      <AnimatePresence>
-        {showMenu && (
-          <motion.div
-            key="dropdown"
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="absolute right-0 z-50 mt-3.5 w-52 sm:mt-3"
-            role="menu"
-          >
-            <div className={dropdownSurfaceClass}>
-              <div className={SURFACE_PANEL_ARROW} />
+      {showMenu && (
+        <div
+          className="absolute right-0 z-50 mt-3.5 w-52 sm:mt-3 sm:w-56"
+          role="menu"
+        >
+          <div className={dropdownSurfaceClass}>
+            <div className={dropdownArrowClass} />
 
-              <ul className="relative z-10 py-1">
+            <ul className="relative z-10 py-1">
+              <li>
+                <NavLink
+                  to="/profile"
+                  {...getRoutePressIntentProps(preloadRoutes.profile)}
+                  className={cx(
+                    linkBase,
+                    location.pathname === "/profile" && linkActive,
+                  )}
+                >
+                  View profile
+                </NavLink>
+              </li>
+
+              {!isDashboardRoute && (
                 <li>
                   <NavLink
                     to="/dashboard"
-                    className={cx(
-                      linkBase,
-                      location.pathname === "/dashboard" && linkActive,
-                    )}
+                    {...getRoutePressIntentProps(preloadRoutes.dashboardMyPosts)}
+                    className={cx(linkBase)}
                   >
                     Dashboard
                   </NavLink>
                 </li>
+              )}
 
-                <li>
-                  <NavLink
-                    to="/profile"
-                    className={cx(
-                      linkBase,
-                      location.pathname === "/profile" && linkActive,
-                    )}
-                  >
-                    Profile Info
-                  </NavLink>
-                </li>
+              <li>
+                <NavLink
+                  to="/dashboard/settings"
+                  {...getRoutePressIntentProps(preloadRoutes.dashboardSettings)}
+                  className={cx(
+                    linkBase,
+                    location.pathname === "/dashboard/settings" && linkActive,
+                  )}
+                >
+                  Settings
+                </NavLink>
+              </li>
 
-                <li>
-                  <NavLink
-                    to="/dashboard/settings"
-                    className={cx(
-                      linkBase,
-                      location.pathname === "/dashboard/settings" && linkActive,
-                    )}
-                  >
-                    Settings
-                  </NavLink>
-                </li>
+              <li aria-hidden="true" className={dividerClass} />
 
-                <li aria-hidden="true" className={dividerClass} />
+              <li>
+                <NavLink
+                  to="/report"
+                  {...getRoutePressIntentProps(preloadRoutes.reportIssue)}
+                  className={cx(
+                    linkBase,
+                    location.pathname === "/report" && linkActive,
+                  )}
+                >
+                  Support & feedback
+                </NavLink>
+              </li>
 
-                <li>
-                  <NavLink
-                    to="/about"
-                    className={cx(
-                      linkBase,
-                      location.pathname === "/about" && linkActive,
-                    )}
-                  >
-                    About
-                  </NavLink>
-                </li>
+              <li>
+                <NavLink
+                  to="/about"
+                  {...getRoutePressIntentProps(preloadRoutes.about)}
+                  className={cx(
+                    linkBase,
+                    location.pathname === "/about" && linkActive,
+                  )}
+                >
+                  About LifeRecompiled
+                </NavLink>
+              </li>
 
-                <li>
-                  <NavLink
-                    to="/report"
-                    className={cx(
-                      linkBase,
-                      location.pathname === "/report" && linkActive,
-                    )}
-                  >
-                    Support & feedback
-                  </NavLink>
-                </li>
-
-                <li className="mt-1 border-t border-zinc-800/80 pt-1">
-                  <button
-                    type="button"
-                    className={cx(
-                      "w-full rounded-lg px-4 py-2 text-left text-sm text-zinc-200 transition hover:bg-zinc-900/50 hover:text-zinc-100 disabled:opacity-60",
-                      FOCUS_RING,
-                    )}
-                    onClick={logout}
-                    disabled={isLoggingOut}
-                  >
-                    {isLoggingOut ? "Logging out..." : "Logout"}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <li className="mt-1 border-t border-zinc-800/80 pt-1">
+                <button
+                  type="button"
+                  className={cx(
+                    "w-full rounded-lg px-4 py-2 text-left text-sm text-zinc-200 transition hover:bg-zinc-900/50 hover:text-zinc-100 disabled:opacity-60",
+                    FOCUS_RING,
+                  )}
+                  onClick={logout}
+                  disabled={isLoggingOut}
+                >
+                  {isLoggingOut ? "Logging out..." : "Log out"}
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

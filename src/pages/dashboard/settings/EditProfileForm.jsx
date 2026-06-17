@@ -365,9 +365,9 @@ const EditProfileForm = ({ userData }) => {
     pointerIdRef.current = null;
   };
 
-  const labelClass = "block text-sm font-medium text-zinc-200 mb-1";
+  const labelClass = "block text-sm font-semibold text-zinc-200";
   const inputBase =
-    "w-full rounded-lg border border-zinc-800 bg-zinc-950/30 px-3 py-2 text-zinc-100 placeholder:text-zinc-500 " +
+    "w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-500 " +
     "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950";
   const helpText = "text-xs text-zinc-400 mt-1";
   const errorText = "text-rose-400 text-sm mt-1";
@@ -379,20 +379,23 @@ const EditProfileForm = ({ userData }) => {
 
   return (
     <form
-      className="space-y-6"
+      className="space-y-5"
       aria-busy={isSaving ? "true" : "false"}
       noValidate
     >
-      <div className="grid gap-6 xl:gap-8 xl:grid-cols-[240px_1fr] xl:items-start">
+      <div className="grid gap-5 xl:grid-cols-[220px_1fr] xl:items-start">
         {/* Avatar + upload */}
-        <div className="xl:text-center">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 xl:text-center">
           <label id="profile-picture-label" className={labelClass}>
             Profile picture
           </label>
+          <p className="mt-1 text-xs text-zinc-500">
+            This appears on your public profile and posts.
+          </p>
 
-          <div className="mt-2 flex flex-col items-center gap-4 sm:flex-row sm:items-center xl:flex-col xl:items-center">
+          <div className="mt-4 flex flex-col items-center gap-4">
             {/* Drag preview wrapper */}
-            <div className="flex flex-col items-center gap-2 mx-auto sm:mx-0 xl:mx-auto">
+            <div className="flex flex-col items-center gap-2">
               <div
                 className={[
                   "inline-flex rounded-full",
@@ -441,7 +444,7 @@ const EditProfileForm = ({ userData }) => {
               )}
             </div>
 
-            <div className="w-full sm:flex-1 sm:min-w-0 xl:w-full flex flex-col items-center sm:items-start xl:items-center">
+            <div className="flex w-full flex-col items-center">
               <p
                 id="profile-picture-status"
                 className="sr-only"
@@ -481,7 +484,7 @@ const EditProfileForm = ({ userData }) => {
         </div>
 
         {/* Fields */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           <div>
             <label htmlFor="profile-name" className={labelClass}>
               Name
@@ -572,7 +575,7 @@ const EditProfileForm = ({ userData }) => {
       </div>
 
       {/* Footer actions */}
-      <div className="pt-2 border-t border-zinc-800/80">
+      <div className="border-t border-zinc-800/80 pt-4">
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
           <button
             type="button"

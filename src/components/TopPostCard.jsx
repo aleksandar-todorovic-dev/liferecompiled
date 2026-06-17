@@ -11,6 +11,10 @@ import {
   PILL_META,
   cx,
 } from "../constants/uiClasses";
+import {
+  getRouteIntentProps,
+  preloadRoutes,
+} from "../routes/routePreloaders";
 
 const MAX_TAGS_IN_APP = 5; // UI limit: keep card compact and tag rail readable (avoid noisy overflow)
 
@@ -123,6 +127,7 @@ function TopPostCard({ post }) {
       role="button"
       tabIndex={0}
       onClick={goToPost}
+      {...getRouteIntentProps(preloadRoutes.postDetails)}
       onKeyDown={(e) => {
         // Keyboard parity: card behaves like a button for accessibility.
         if (e.key === "Enter" || e.key === " ") {
@@ -134,32 +139,25 @@ function TopPostCard({ post }) {
         CARD_BASE,
         CARD_HOVER,
         "group text-left cursor-pointer",
-        "relative isolate overflow-hidden",
-        "bg-zinc-950/25 border border-zinc-800/80 ring-1 ring-zinc-100/5",
-        "hover:border-zinc-700/80 hover:bg-zinc-950/20",
-        "active:translate-y-px",
+        "relative overflow-hidden",
+        "border border-zinc-800 bg-zinc-950 shadow-sm",
+        "hover:border-zinc-700 hover:bg-zinc-950/90",
         "h-auto lg:h-full",
         FOCUS_RING,
       )}
       aria-label={`Open post: ${post?.title ?? "Untitled"}`}
     >
-      {/* Decorative layers: visual depth without affecting layout or hit targets */}
-      {/* base glow */}
-      <div className="pointer-events-none absolute inset-0 -z-10 opacity-100">
-        <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-sky-500/5 blur-3xl" />
-        <div className="absolute -bottom-28 -right-24 h-80 w-80 rounded-full bg-emerald-500/5 blur-3xl" />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-500/15 to-transparent" />
-      </div>
-
-      {/* hover boost */}
-      <div className="pointer-events-none absolute inset-0 -z-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-        <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl" />
-        <div className="absolute -bottom-28 -right-24 h-80 w-80 rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-500/25 to-transparent" />
-      </div>
-
-      <div className="relative flex min-w-0 flex-col lg:h-full">
+      <div className="flex min-w-0 flex-col lg:h-full">
         <div className="min-w-0">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className={reactionsPill} title="Total reactions">
+              {reactionsTotal}
+            </span>
+            <span className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+              Reactions
+            </span>
+          </div>
+
           <h3
             className={cx(
               "min-w-0 text-base font-semibold text-zinc-100",
@@ -223,10 +221,8 @@ function TopPostCard({ post }) {
 
           {/* Reactions row */}
           <div className="mt-2 flex items-center justify-between gap-2">
-            <span className="text-xs text-zinc-500">Reactions</span>
-            <span className={reactionsPill} title="Total reactions">
-              {reactionsTotal}
-            </span>
+            <span className="text-xs text-zinc-500">Open post</span>
+            <span className="text-xs font-medium text-zinc-300">Read</span>
           </div>
         </div>
       </div>

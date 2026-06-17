@@ -15,12 +15,12 @@ const BioSection = ({ bio }) => {
   const text = typeof bio === "string" ? bio.trim() : "";
 
   return (
-    <div className="mt-2 text-sm leading-relaxed text-zinc-300">
+    <div className="mt-3 text-sm leading-6 text-zinc-300">
       {text ? (
         <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{text}</p>
       ) : (
         <p className="italic text-zinc-500">
-          This user hasn&apos;t added a bio yet.
+          This member hasn&apos;t added a bio yet.
         </p>
       )}
     </div>

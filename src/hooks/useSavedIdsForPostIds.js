@@ -35,14 +35,20 @@ function chunkArray(arr, size) {
  * - When `userId` is missing or `postIds` is empty → returns an empty Set.
  * - Runs on dependency changes (not a real-time listener).
  * - Exposes `setSavedIds` to support optimistic save/unsave toggles in the UI.
+ * - Exposes readiness so callers can avoid rendering false unsaved states
+ *   before the batch lookup resolves.
  *
  * @param {string|null} userId - Current user uid
  * @param {string[]|null} postIds - Post IDs to check (usually the visible page)
- * @returns {{ savedIds: Set<string>, setSavedIds: Function, isLoadingSaved: boolean }}
+ * @returns {{ savedIds: Set<string>, setSavedIds: Function, isLoadingSaved: boolean, isSavedStatusReady: boolean, checkedSavedPostIds: Set<string> }}
  */
 export function useSavedIdsForPostIds(userId, postIds) {
   const [savedIds, setSavedIds] = useState(() => new Set());
   const [isLoadingSaved, setIsLoadingSaved] = useState(false);
+  const [resolvedLookupKey, setResolvedLookupKey] = useState("");
+  const [checkedSavedPostIds, setCheckedSavedPostIds] = useState(
+    () => new Set(),
+  );
 
   const safeIds = useMemo(() => {
     // Defensive filtering prevents invalid values from reaching Firestore queries.
@@ -50,12 +56,22 @@ export function useSavedIdsForPostIds(userId, postIds) {
     return postIds.filter(Boolean);
   }, [postIds]);
 
+  const lookupKey = useMemo(
+    () => (userId && safeIds.length > 0 ? `${userId}:${safeIds.join("|")}` : ""),
+    [userId, safeIds],
+  );
+
+  const isSavedStatusReady = !lookupKey || resolvedLookupKey === lookupKey;
+
   useEffect(() => {
     let canceled = false;
 
     // Guard: no user or nothing to check -> reset to empty state.
     if (!userId || safeIds.length === 0) {
       setSavedIds(new Set());
+      setCheckedSavedPostIds(new Set());
+      setIsLoadingSaved(false);
+      setResolvedLookupKey("");
       return;
     }
 
@@ -81,9 +97,15 @@ export function useSavedIdsForPostIds(userId, postIds) {
         }
 
         setSavedIds(next);
+        setCheckedSavedPostIds(new Set(safeIds));
+        setResolvedLookupKey(lookupKey);
       } catch (e) {
         // Soft failure: return empty Set, keep UI stable, and log for debugging.
-        if (!canceled) setSavedIds(new Set());
+        if (!canceled) {
+          setSavedIds(new Set());
+          setCheckedSavedPostIds(new Set(safeIds));
+          setResolvedLookupKey(lookupKey);
+        }
         console.error("[useSavedIdsForPostIds] Failed:", e);
       } finally {
         if (!canceled) setIsLoadingSaved(false);
@@ -96,7 +118,13 @@ export function useSavedIdsForPostIds(userId, postIds) {
     return () => {
       canceled = true;
     };
-  }, [userId, safeIds]);
+  }, [userId, safeIds, lookupKey]);
 
-  return { savedIds, setSavedIds, isLoadingSaved };
+  return {
+    savedIds,
+    setSavedIds,
+    isLoadingSaved,
+    isSavedStatusReady,
+    checkedSavedPostIds,
+  };
 }

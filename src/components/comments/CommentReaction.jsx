@@ -76,7 +76,7 @@ const CommentReaction = ({ commentId, currentUserId, locked = false }) => {
   const handleLike = async () => {
     // Guest gate: keep UX friendly and dedupe via toastId.
     if (!currentUserId) {
-      showInfoToast("Please login to react 😊", { toastId: "react:auth" });
+      showInfoToast("Please log in to react.", { toastId: "react:auth" });
       return;
     }
 

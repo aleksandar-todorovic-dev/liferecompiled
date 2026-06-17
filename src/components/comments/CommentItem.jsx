@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState, useContext } from "react";
 import PropTypes from "prop-types";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { motion } from "framer-motion";
 import {
   FiMoreHorizontal,
   FiChevronDown,
@@ -32,6 +31,14 @@ import ConfirmModal from "../modals/ConfirmModal";
 import BadgeModal from "../modals/BadgeModal";
 import ShieldIcon from "../ui/ShieldIcon";
 import Avatar from "../common/Avatar";
+import {
+  SkeletonCircle,
+  SkeletonLine,
+} from "../ui/skeletonLoader/SkeletonBits";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../../routes/routePreloaders";
 
 dayjs.extend(relativeTime);
 
@@ -123,6 +130,7 @@ const CommentItem = ({
   parentAuthor = null, // { id, name } for "Replying to"
 }) => {
   const [user, setUser] = useState(null);
+  const [isUserLoading, setIsUserLoading] = useState(Boolean(userId));
   const [isReplying, setIsReplying] = useState(false);
   const [isRepliesOpen, setIsRepliesOpen] = useState(false);
 
@@ -177,7 +185,7 @@ const CommentItem = ({
   const onReportClick = () => {
     // Auth gate early to avoid opening modal that cannot be confirmed.
     if (!currentUser) {
-      showInfoToast("Please login to report 😊", {
+      showInfoToast("Please log in to report.", {
         toastId: REPORT_COMMENT_AUTH_TOAST_ID,
       });
       return;
@@ -190,7 +198,7 @@ const CommentItem = ({
   const onConfirmReport = async () => {
     // Double-check auth in case session changed while modal was open.
     if (!currentUser) {
-      showInfoToast("Please login to report 😊", {
+      showInfoToast("Please log in to report.", {
         toastId: REPORT_COMMENT_AUTH_TOAST_ID,
       });
       setShowReportModal(false);
@@ -229,8 +237,15 @@ const CommentItem = ({
 
   useEffect(() => {
     // Fetch author public profile for name/avatar/badges (best-effort).
-    if (!userId) return;
+    if (!userId) {
+      setUser(null);
+      setIsUserLoading(false);
+      return;
+    }
+
     let isMounted = true;
+    setUser(null);
+    setIsUserLoading(true);
 
     (async () => {
       try {
@@ -238,6 +253,9 @@ const CommentItem = ({
         if (isMounted) setUser(data);
       } catch (e) {
         console.error("Failed to fetch user:", e);
+        if (isMounted) setUser(null);
+      } finally {
+        if (isMounted) setIsUserLoading(false);
       }
     })();
 
@@ -399,24 +417,23 @@ const CommentItem = ({
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
-        className="py-3"
-      >
-        <div className="rounded-xl px-2 sm:px-3 py-2.5 hover:bg-zinc-950/20 transition">
+      <div className={depth === 0 ? "py-1" : "py-0.5"}>
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-3">
           <div className="grid grid-cols-[40px_minmax(0,1fr)] gap-3 items-start">
             <div className="relative">
-              <Avatar
-                src={user?.profilePicture ?? DEFAULT_PROFILE_PICTURE}
-                size={32}
-                zoomable
-                badge={user?.badges?.topContributor ?? false}
-                alt={`Profile picture of ${user?.name ?? "user"}`}
-              />
+              {isUserLoading ? (
+                <SkeletonCircle size={32} />
+              ) : (
+                <Avatar
+                  src={user?.profilePicture ?? DEFAULT_PROFILE_PICTURE}
+                  size={32}
+                  zoomable
+                  badge={user?.badges?.topContributor ?? false}
+                  alt={`Profile picture of ${user?.name ?? "user"}`}
+                />
+              )}
 
-              {user?.badges?.topContributor && (
+              {!isUserLoading && user?.badges?.topContributor && (
                 <button
                   type="button"
                   title="Top Contributor · Code-powered"
@@ -444,19 +461,22 @@ const CommentItem = ({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
                 {/* Clickable author link when `userId` exists (prevents card-level click bubbling). */}
-                {userId ? (
+                {isUserLoading ? (
+                  <SkeletonLine as="span" w="w-28" h="h-4" />
+                ) : userId ? (
                   <Link
                     to={`/profile/${userId}`}
+                    {...getRoutePressIntentProps(preloadRoutes.profile)}
                     className={`${NAME_LINK_BASE} truncate max-w-[12rem] sm:max-w-[18rem]`}
                     onClick={(e) => e.stopPropagation()}
                     aria-label={`Open profile: ${user?.name || "author"}`}
-                    title={user?.name || "Unknown author"}
+                    title={user?.name || "Unavailable profile"}
                   >
-                    {user?.name || "Unknown author"}
+                    {user?.name || "Unavailable profile"}
                   </Link>
                 ) : (
                   <span className="font-semibold text-sm text-zinc-100">
-                    {user?.name || "Unknown author"}
+                    {user?.name || "Unavailable profile"}
                   </span>
                 )}
 
@@ -476,6 +496,7 @@ const CommentItem = ({
                     Replying to{" "}
                     <Link
                       to={`/profile/${parentAuthor.id}`}
+                      {...getRoutePressIntentProps(preloadRoutes.profile)}
                       className="text-zinc-300 hover:text-zinc-100 hover:underline underline-offset-4 decoration-zinc-500/70"
                       onClick={(e) => e.stopPropagation()}
                       aria-label={`Open profile: ${parentAuthor?.name || "user"}`}
@@ -499,7 +520,7 @@ const CommentItem = ({
                     name="editedComment"
                     value={editedContent}
                     onChange={(e) => setEditedContent(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950/40 p-2 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 resize-none max-h-40 overflow-y-auto"
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950 p-2 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 resize-none max-h-40 overflow-y-auto"
                     aria-label="Edit comment"
                   />
                   <div className="flex gap-3 mt-2 text-sm">
@@ -565,7 +586,7 @@ const CommentItem = ({
                     ref={menuBtnRef}
                     type="button"
                     onClick={openMenu}
-                    className="inline-flex items-center justify-center rounded-lg p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                    className="inline-flex items-center justify-center rounded-lg p-2 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                     aria-label="More actions"
                     aria-expanded={isMenuOpen}
                   >
@@ -593,7 +614,7 @@ const CommentItem = ({
                   <button
                     type="button"
                     onClick={() => setIsRepliesOpen((v) => !v)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-950/40 px-2.5 py-1 text-xs text-sky-200 hover:bg-zinc-900/40 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-xs text-sky-200 hover:border-zinc-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                     aria-label={isRepliesOpen ? "Hide replies" : "View replies"}
                   >
                     {isRepliesOpen ? <FiChevronUp /> : <FiChevronDown />}
@@ -616,12 +637,12 @@ const CommentItem = ({
             <div
               className={[
                 "mt-3 space-y-2 relative",
-                "border-l-2 border-zinc-800/40",
+                "border-l-2 border-zinc-800",
                 getRepliesIndent(depth),
               ].join(" ")}
             >
               <span
-                className="absolute -left-[5px] top-2 h-2 w-2 rounded-full bg-zinc-800/60"
+                className="absolute -left-[5px] top-2 h-2 w-2 rounded-full bg-zinc-700"
                 aria-hidden="true"
               />
 
@@ -647,7 +668,7 @@ const CommentItem = ({
               ))}
             </div>
           )}
-      </motion.div>
+      </div>
 
       {isMenuOpen &&
         portalRoot &&
@@ -667,7 +688,7 @@ const CommentItem = ({
               onMouseDown={(e) => e.stopPropagation()}
               role="menu"
             >
-              <div className="rounded-xl border border-zinc-800 bg-zinc-950 shadow-xl ring-1 ring-zinc-100/10 p-1">
+              <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-1.5 shadow-lg">
                 <button
                   type="button"
                   onClick={(e) => {
@@ -675,7 +696,7 @@ const CommentItem = ({
                     closeMenu();
                     onReportClick();
                   }}
-                  className="w-full text-left px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900/60 rounded-lg"
+                  className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-900"
                   role="menuitem"
                 >
                   Report
@@ -689,7 +710,7 @@ const CommentItem = ({
                       closeMenu();
                       setIsEditing(true);
                     }}
-                    className="w-full text-left px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900/60 rounded-lg"
+                    className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-900"
                     role="menuitem"
                   >
                     Edit
@@ -704,7 +725,7 @@ const CommentItem = ({
                       closeMenu();
                       setShowConfirmModal(true);
                     }}
-                    className="w-full text-left px-3 py-2 text-sm text-rose-200 hover:bg-rose-500/10 rounded-lg"
+                    className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-medium text-rose-200 hover:bg-rose-500/10"
                     role="menuitem"
                   >
                     {isDeleting ? "Deleting..." : "Delete"}
@@ -718,8 +739,9 @@ const CommentItem = ({
 
       <ConfirmModal
         isOpen={showConfirmModal}
-        title="Delete Comment"
-        message="Are you sure you want to delete this comment?"
+        title="Delete comment"
+        message="This removes the comment from the thread. Replies can remain visible for context."
+        confirmText="Delete comment"
         onCancel={() => setShowConfirmModal(false)}
         onConfirm={() => {
           handleDelete(commentId);
@@ -729,9 +751,9 @@ const CommentItem = ({
 
       <ConfirmModal
         isOpen={showReportModal}
-        title="Are you sure you want to report this comment?"
-        message="This will notify moderators about this comment."
-        confirmText="Yes"
+        title="Report comment"
+        message="This will notify moderators so they can review this comment."
+        confirmText="Report comment"
         onCancel={onCancelReport}
         onConfirm={onConfirmReport}
       />

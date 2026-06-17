@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BsBookmark, BsBookmarkFill } from "react-icons/bs";
 import { FiLock, FiMessageCircle, FiFlag } from "react-icons/fi";
@@ -33,6 +33,10 @@ import ConfirmModal from "../components/modals/ConfirmModal";
 import BadgeModal from "../components/modals/BadgeModal";
 import Badge from "../components/ui/Bagde";
 import Avatar from "../components/common/Avatar";
+import {
+  SkeletonCircle,
+  SkeletonLine,
+} from "../components/ui/skeletonLoader/SkeletonBits";
 
 import { toggleSavePost } from "../utils/savedPostUtils";
 import {
@@ -160,6 +164,8 @@ const PostDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const [author, setAuthor] = useState(null);
+  const [isAuthorLoading, setIsAuthorLoading] = useState(false);
+  const authorUserIdRef = useRef(null);
 
   const [showReportModal, setShowReportModal] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -183,7 +189,10 @@ const PostDetails = () => {
   const lockedDate = post?.lockedAt?.toDate?.()?.toLocaleDateString?.() ?? null;
 
   // Saved state (bookmarks)
-  const { isSaved, setIsSaved } = useCheckSavedStatus(user, post && post.id);
+  const { isSaved, setIsSaved, isSavedStatusLoading } = useCheckSavedStatus(
+    user,
+    post && post.id,
+  );
 
   // Desktop breakpoint for docked comments column
   const isLgUp = useMediaQuery("(min-width: 1024px)");
@@ -245,6 +254,16 @@ const PostDetails = () => {
           return;
         }
 
+        if (!postData.userId) {
+          authorUserIdRef.current = null;
+          setAuthor(null);
+          setIsAuthorLoading(false);
+        } else if (authorUserIdRef.current !== postData.userId) {
+          authorUserIdRef.current = postData.userId;
+          setAuthor(null);
+          setIsAuthorLoading(true);
+        }
+
         setPost(postData);
         setIsLoading(false);
       },
@@ -263,9 +282,17 @@ const PostDetails = () => {
 
   // Fetch author profile (separate user doc)
   useEffect(() => {
-    if (!post?.userId) return;
+    if (!post?.userId) {
+      authorUserIdRef.current = null;
+      setAuthor(null);
+      setIsAuthorLoading(false);
+      return;
+    }
 
     let cancelled = false;
+    authorUserIdRef.current = post.userId;
+    setAuthor(null);
+    setIsAuthorLoading(true);
 
     (async () => {
       try {
@@ -273,6 +300,9 @@ const PostDetails = () => {
         if (!cancelled) setAuthor(data);
       } catch (e) {
         console.error("Error fetching author:", e);
+        if (!cancelled) setAuthor(null);
+      } finally {
+        if (!cancelled) setIsAuthorLoading(false);
       }
     })();
 
@@ -285,7 +315,37 @@ const PostDetails = () => {
   const tags = useMemo(() => buildUniqueTags(post?.tags), [post?.tags]);
 
   if (isLoading) return <Spinner />;
-  if (!post) return <p>Post not found.</p>;
+  if (!post) {
+    return (
+      <div className="ui-shell py-10">
+        <section
+          className="ui-card mx-auto flex max-w-2xl flex-col items-center px-5 py-8 text-center sm:px-8 sm:py-10"
+          aria-live="polite"
+        >
+          <div
+            className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-lg font-semibold text-sky-300"
+            aria-hidden="true"
+          >
+            •
+          </div>
+          <h1 className="text-lg font-semibold text-zinc-100">
+            Post not found
+          </h1>
+          <p className="mt-2 max-w-md text-sm leading-6 text-zinc-400">
+            This post may have been removed, archived, or the link may be
+            incorrect.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="ui-button-primary mt-5"
+          >
+            Back to feed
+          </button>
+        </section>
+      </div>
+    );
+  }
 
   /**
    * Toggle saved state for this post.
@@ -293,6 +353,8 @@ const PostDetails = () => {
    */
   const handleSaveToggle = async (e) => {
     e.stopPropagation();
+
+    if (isSavedStatusLoading) return;
 
     const currentUpdated = post.updatedAt || post.createdAt;
 
@@ -319,7 +381,7 @@ const PostDetails = () => {
    */
   const onReportClick = () => {
     if (!user) {
-      showInfoToast("Please login to report 😊", {
+      showInfoToast("Please log in to report.", {
         toastId: REPORT_POST_AUTH_TOAST_ID,
       });
       return;
@@ -335,7 +397,7 @@ const PostDetails = () => {
    */
   const onConfirmReport = async () => {
     if (!user) {
-      showInfoToast("Please login to report 😊", {
+      showInfoToast("Please log in to report.", {
         toastId: REPORT_POST_AUTH_TOAST_ID,
       });
       setShowReportModal(false);
@@ -412,25 +474,19 @@ const PostDetails = () => {
 
   // Layout classes
   const wrapperClass =
-    "w-full max-w-7xl mx-auto my-0 sm:my-8 " +
-    "pb-[calc(1.25rem+env(safe-area-inset-bottom))] lg:pb-0";
+    "w-full max-w-7xl mx-auto my-0 px-3 sm:my-8 sm:px-4 lg:px-6 " +
+    "pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0";
 
   const gridClass =
-    "grid gap-4 lg:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] lg:items-start";
+    "grid gap-5 lg:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] lg:items-start";
 
   const cardBase =
-    "rounded-none border-0 bg-transparent ring-0 shadow-none " +
-    "sm:rounded-2xl sm:border sm:border-zinc-800/70 sm:bg-zinc-950/40 sm:ring-1 sm:ring-zinc-100/5 sm:shadow-sm";
+    "rounded-2xl border border-zinc-800 bg-zinc-950 shadow-sm";
 
   const postCardClass = [
     cardBase,
-    "overflow-visible sm:overflow-hidden p-1 sm:p-6",
-    "flex flex-col",
-    "min-h-[calc(100vh-7.5rem)] min-h-[calc(100svh-7.5rem)] sm:min-h-0",
-    "lg:h-[calc(100vh-9rem)]",
-    post.locked
-      ? "opacity-90 grayscale hover:opacity-100 transition duration-200"
-      : "",
+    "overflow-hidden p-4 sm:p-6 lg:p-8",
+    post.locked ? "border-amber-500/25" : "",
   ].join(" ");
 
   const TAG_PILL =
@@ -447,16 +503,20 @@ const PostDetails = () => {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-2 min-w-0">
                   <div className="relative flex-none">
-                    <Avatar
-                      src={author?.profilePicture ?? DEFAULT_PROFILE_PICTURE}
-                      size={36}
-                      zoomable
-                      badge={author?.badges?.topContributor ?? false}
-                      alt={author?.name ?? "Author"}
-                    />
+                    {isAuthorLoading ? (
+                      <SkeletonCircle size={36} />
+                    ) : (
+                      <Avatar
+                        src={author?.profilePicture ?? DEFAULT_PROFILE_PICTURE}
+                        size={36}
+                        zoomable
+                        badge={author?.badges?.topContributor ?? false}
+                        alt={author?.name ?? "Author"}
+                      />
+                    )}
 
                     {/* Top Contributor badge button (opens modal) */}
-                    {author?.badges?.topContributor && (
+                    {!isAuthorLoading && author?.badges?.topContributor && (
                       <button
                         type="button"
                         title="Top Contributor · Code-powered"
@@ -482,12 +542,14 @@ const PostDetails = () => {
 
                   <div className="min-w-0">
                     {/* Author link (only when author loaded) */}
-                    {author?.id && (
+                    {isAuthorLoading ? (
+                      <SkeletonLine as="span" w="w-28" h="h-4" />
+                    ) : author?.id ? (
                       <AuthorLink
                         author={author}
                         className="inline-block max-w-[10rem] sm:max-w-[22rem] truncate align-middle"
                       />
-                    )}
+                    ) : null}
 
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-500">
                       <span className="whitespace-nowrap sm:hidden">
@@ -502,24 +564,37 @@ const PostDetails = () => {
 
                 {/* Right side actions: save + report */}
                 <div className="flex items-center gap-1.5 flex-none shrink-0">
-                  <button
-                    type="button"
-                    onClick={handleSaveToggle}
-                    title={isSaved ? "Remove from saved" : "Save this post"}
-                    className="rounded-xl p-2 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-900/40 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
-                  >
-                    {isSaved ? (
-                      <BsBookmarkFill className="text-sky-200" />
-                    ) : (
-                      <BsBookmark />
-                    )}
-                  </button>
+                  {isSavedStatusLoading ? (
+                    <button
+                      type="button"
+                      disabled
+                      aria-disabled="true"
+                      aria-label="Checking saved status"
+                      title="Checking saved status"
+                      className="rounded-xl border border-zinc-800 bg-zinc-900 p-2"
+                    >
+                      <span className="block h-4 w-4 animate-pulse rounded bg-zinc-700/70" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleSaveToggle}
+                      title={isSaved ? "Remove from saved" : "Save this post"}
+                      className="rounded-xl border border-zinc-800 bg-zinc-900 p-2 text-zinc-300 hover:border-zinc-700 hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                    >
+                      {isSaved ? (
+                        <BsBookmarkFill className="text-sky-200" />
+                      ) : (
+                        <BsBookmark />
+                      )}
+                    </button>
+                  )}
 
                   <button
                     type="button"
                     onClick={onReportClick}
                     aria-label="Report"
-                    className="rounded-xl px-2.5 py-2 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-900/40 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                    className="rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 py-2 text-zinc-300 hover:border-zinc-700 hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                   >
                     <FiFlag className="text-lg sm:hidden" />
                     <span className="hidden sm:inline">Report</span>
@@ -528,7 +603,7 @@ const PostDetails = () => {
               </div>
 
               {/* Post title */}
-              <h1 className="mt-3 text-[1.45rem] leading-tight sm:text-3xl font-bold text-zinc-100 break-words">
+              <h1 className="mt-5 text-[1.65rem] font-semibold leading-tight text-zinc-100 break-words sm:text-4xl">
                 {post.title}
               </h1>
 
@@ -536,7 +611,7 @@ const PostDetails = () => {
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {post?.category && (
                   <span
-                    className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-950/40 px-2.5 py-1 text-xs text-zinc-200"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-xs text-zinc-200"
                     aria-label={`Category: ${post.category}`}
                     title={`Category: ${post.category}`}
                   >
@@ -565,7 +640,7 @@ const PostDetails = () => {
                 {post.locked && lockedDate && (
                   <span
                     title="This post is archived and cannot be edited or commented"
-                    className="inline-flex h-7 items-center gap-1 rounded-full border border-zinc-800 bg-zinc-950/40 px-2 text-xs text-zinc-200"
+                    className="inline-flex h-7 items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 text-xs text-amber-100"
                   >
                     <FiLock className="w-4 h-4 shrink-0" />
                     <span className="relative top-px">
@@ -577,15 +652,15 @@ const PostDetails = () => {
             </div>
 
             {/* BODY */}
-            <div className="mt-6 flex-1 min-h-0 overflow-y-visible lg:overflow-y-auto lg:pr-1 ui-scrollbar">
-              <div className="space-y-6">
+            <div className="mt-7">
+              <div className="space-y-7">
                 {post?.description && (
-                  <p className="text-zinc-200 text-base leading-relaxed break-words">
+                  <p className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-[0.95rem] leading-7 text-zinc-200 break-words sm:text-base">
                     {post.description}
                   </p>
                 )}
 
-                <div className="text-zinc-200 whitespace-pre-wrap break-words leading-relaxed">
+                <div className="whitespace-pre-wrap text-[0.96rem] leading-7 text-zinc-200 break-words sm:text-base sm:leading-8">
                   {post?.content}
                 </div>
               </div>
@@ -625,7 +700,7 @@ const PostDetails = () => {
                     </div>
 
                     {/* Fade edge for horizontal scroll */}
-                    <div className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-zinc-950/30 to-transparent" />
+                    <div className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-zinc-950 to-transparent" />
                   </div>
                 </div>
 
@@ -649,7 +724,7 @@ const PostDetails = () => {
                       type="button"
                       onClick={() => setDeleteModalOpen(true)}
                       disabled={isDeletingPost}
-                      className={`ui-button bg-rose-600 text-zinc-50 hover:bg-rose-500 focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
+                      className={`ui-button-secondary border-rose-500/40 text-rose-200 hover:bg-rose-500/10 focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
                         isDeletingPost ? "opacity-60 cursor-not-allowed" : ""
                       }`}
                     >
@@ -668,12 +743,12 @@ const PostDetails = () => {
         {isLgUp && (
           <aside className="hidden lg:block min-w-0">
             <div
-              className={`${cardBase} lg:sticky lg:top-24 flex flex-col h-[calc(100vh-9rem)]`}
+              className={`${cardBase} lg:sticky lg:top-24 flex h-[calc(100vh-9rem)] flex-col overflow-hidden`}
             >
               <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-zinc-800/70">
                 <div className="min-w-0">
                   <h2 className="text-sm font-semibold text-zinc-100">
-                    Comments
+                    Discussion
                   </h2>
                   <p className="mt-0.5 text-xs text-zinc-500">
                     {commentsCount} total
@@ -696,7 +771,7 @@ const PostDetails = () => {
               </div>
 
               {/* Comment form (separate render to keep it always visible at bottom) */}
-              <div className="flex-none border-t border-zinc-800/70 bg-zinc-950/20 px-4 py-3">
+              <div className="flex-none border-t border-zinc-800 bg-zinc-950 px-4 py-3">
                 <Comments
                   postID={postId}
                   locked={post.locked}
@@ -711,17 +786,17 @@ const PostDetails = () => {
 
       {/* Mobile bottom bar (opens CommentsSheet) */}
       {!isLgUp && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-800/70 bg-zinc-950/80 backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-800 bg-zinc-950">
           <div className="mx-auto w-full max-w-7xl px-3 py-3">
             <button
               type="button"
               onClick={() => setIsCommentsOpen(true)}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-full border border-zinc-800 bg-zinc-950/90 px-4 py-3 text-zinc-100 shadow-lg hover:bg-zinc-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
-              aria-label="Open comments"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-4 py-3 text-zinc-100 shadow-sm hover:border-zinc-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              aria-label="Open discussion"
             >
               <FiMessageCircle className="text-lg" />
-              <span className="text-sm font-medium">Comments</span>
-              <span className="ml-1 inline-flex min-w-7 justify-center rounded-full border border-zinc-800 bg-zinc-950/60 px-2 py-0.5 text-xs text-zinc-300">
+              <span className="text-sm font-medium">Open discussion</span>
+              <span className="ml-1 inline-flex min-w-7 justify-center rounded-full border border-zinc-800 bg-zinc-950 px-2 py-0.5 text-xs text-zinc-300">
                 {commentsCount}
               </span>
             </button>
@@ -761,9 +836,9 @@ const PostDetails = () => {
       {/* Report confirmation */}
       <ConfirmModal
         isOpen={showReportModal}
-        title="Are you sure you want to report this post?"
-        message="This will notify moderators about this post."
-        confirmText="Yes"
+        title="Report post"
+        message="This will notify moderators so they can review this post."
+        confirmText="Report post"
         onCancel={() => setShowReportModal(false)}
         onConfirm={onConfirmReport}
       />
@@ -771,13 +846,13 @@ const PostDetails = () => {
       {/* Admin delete confirmation */}
       <ConfirmModal
         isOpen={deleteModalOpen}
-        title="Delete Post Permanently"
+        title="Delete post permanently"
         message="Are you sure you want to permanently delete this post? This action cannot be undone."
-        confirmText={isDeletingPost ? "Deleting..." : "Delete"}
-        confirmButtonClass={`ui-button bg-rose-600 text-zinc-50 hover:bg-rose-500 focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
+        confirmText={isDeletingPost ? "Deleting..." : "Delete permanently"}
+        confirmButtonClass={`ui-button justify-center bg-rose-600 text-zinc-50 hover:bg-rose-500 focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
           isDeletingPost ? "opacity-60 cursor-not-allowed" : ""
         }`}
-        cancelButtonClass="ui-button-secondary"
+        cancelButtonClass="ui-button-secondary justify-center"
         onCancel={() => {
           if (!isDeletingPost) setDeleteModalOpen(false);
         }}

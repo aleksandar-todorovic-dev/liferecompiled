@@ -175,7 +175,7 @@ const CommentsSheet = ({
   return createPortal(
     <div className="fixed inset-0 z-50">
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/70"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -186,12 +186,12 @@ const CommentsSheet = ({
           ref={panelRef}
           role="dialog"
           aria-modal="true"
-          aria-label="Comments"
+          aria-label="Discussion"
           style={panelTransformStyle}
           className={[
             "h-full w-full sm:max-w-xl",
             "rounded-t-2xl sm:rounded-2xl",
-            "border border-zinc-800 bg-zinc-950/90 shadow-xl overflow-hidden",
+            "border border-zinc-800 bg-zinc-950 shadow-lg overflow-hidden",
             "flex flex-col",
             // Avoid fighting the user's drag with animations; animate only when snapping.
             isDragging ? "" : "transition-transform duration-200 ease-out",
@@ -222,7 +222,7 @@ const CommentsSheet = ({
 
           {/* Header (count comes from parent to avoid duplicating list computation) */}
           <div className="flex items-baseline gap-2 px-4 pb-3 border-b border-zinc-800 flex-none">
-            <h2 className="text-sm font-semibold text-zinc-100">Comments</h2>
+            <h2 className="text-sm font-semibold text-zinc-100">Discussion</h2>
             <span className="text-xs text-zinc-400">{count ?? 0}</span>
           </div>
 
@@ -242,12 +242,12 @@ const CommentsSheet = ({
 
           {/* Composer (collapsed -> expands) */}
           {!locked && (
-            <div className="flex-none border-t border-zinc-800 bg-zinc-950/95 px-4 py-3">
+            <div className="flex-none border-t border-zinc-800 bg-zinc-950 px-4 py-3">
               {!isComposerOpen ? (
                 <button
                   type="button"
                   onClick={openComposer}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-center text-sm text-zinc-400 hover:bg-zinc-900/40 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-center text-sm text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                   aria-label="Add a comment"
                 >
                   <FiMessageCircle className="text-base text-zinc-500" />

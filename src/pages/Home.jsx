@@ -11,6 +11,10 @@ import SearchAndFilterBar, {
 import SkeletonCard from "../components/ui/skeletonLoader/SkeletonCard";
 import NoResultsMessage from "../components/NoResultsMessage";
 import { AuthContext } from "../context/AuthContext";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../routes/routePreloaders";
 
 const PAGE_SIZE_UI = 12;
 
@@ -37,6 +41,7 @@ const Home = () => {
   const [hasMore, setHasMore] = useState(true);
 
   const {
+    searchTerm,
     sortBy,
     selectedCategories,
     setSortBy,
@@ -176,7 +181,8 @@ const Home = () => {
   // Saved-state hook expects post ids; memo avoids useless recalcs on renders.
   const postIds = useMemo(() => finalPosts.map((p) => p.id), [finalPosts]);
 
-  const { savedIds, setSavedIds } = useSavedIdsForPostIds(user?.uid, postIds);
+  const { savedIds, setSavedIds, checkedSavedPostIds } =
+    useSavedIdsForPostIds(user?.uid, postIds);
 
   const handleSavedChange = useCallback(
     (postId, nextState) => {
@@ -192,6 +198,13 @@ const Home = () => {
   );
 
   const showNoResults = !isLoading && finalPosts.length === 0;
+  const activeViewLabel = isTrendingSort
+    ? "Trending"
+    : activeCategory
+      ? activeCategory
+      : sortBy === "oldest"
+        ? "Oldest first"
+        : "Newest first";
 
   const handleToggleDesktopSidebar = () =>
     setIsDesktopSidebarOpen((prev) => !prev);
@@ -205,6 +218,7 @@ const Home = () => {
         type="button"
         className="ui-button-primary inline-flex h-11 w-11 items-center justify-center p-0 sm:hidden"
         aria-label="Create new post"
+        {...getRoutePressIntentProps(preloadRoutes.dashboardCreate)}
         onClick={() => navigate("/dashboard/create")}
       >
         <svg
@@ -222,10 +236,11 @@ const Home = () => {
         </svg>
       </button>
 
-      {/* Desktop: explicit CTA label. */}
+      {/* Tablet: explicit CTA label. Desktop uses the global header action. */}
       <button
         type="button"
-        className="hidden sm:inline-flex ui-button-primary"
+        className="hidden sm:inline-flex ui-button-primary lg:hidden"
+        {...getRoutePressIntentProps(preloadRoutes.dashboardCreate)}
         onClick={() => navigate("/dashboard/create")}
       >
         Create New Post
@@ -253,7 +268,7 @@ const Home = () => {
   return (
     <div className="pb-2">
       <div className="sticky top-16 z-40">
-        <div className="w-full border-b border-zinc-800/80 bg-zinc-950/60 backdrop-blur">
+        <div className="w-full border-b border-zinc-800 bg-zinc-950">
           <div className="ui-shell py-3">
             <SearchAndFilterBar
               onSearchChange={() => {}}
@@ -273,20 +288,72 @@ const Home = () => {
         </div>
       </div>
 
+      <header className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+              Public feed
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold text-zinc-100">
+              Discover posts
+            </h1>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-400">
+              Browse writing, ideas, and community feedback from LifeRecompiled
+              authors.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap sm:justify-end">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+              <p className="text-xs text-zinc-500">Showing</p>
+              <p className="font-semibold text-zinc-100">
+                {isLoading ? "..." : finalPosts.length}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+              <p className="text-xs text-zinc-500">View</p>
+              <p className="font-semibold text-zinc-100">{activeViewLabel}</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
       <div className={layoutClass}>
         <div>
           {isLoading ? (
             <SkeletonCard />
           ) : showNoResults ? (
             isTrendingSort ? (
-              <p className="ui-help text-center mt-6" aria-live="polite">
-                No trending posts right now.
-              </p>
+              <section
+                className="ui-card mx-auto mt-6 flex max-w-2xl flex-col items-center px-5 py-8 text-center sm:px-8 sm:py-10"
+                aria-live="polite"
+              >
+                <div
+                  className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-lg font-semibold text-sky-300"
+                  aria-hidden="true"
+                >
+                  •
+                </div>
+                <h2 className="text-base font-semibold text-zinc-100 sm:text-lg">
+                  No trending posts right now
+                </h2>
+                <p className="mt-2 max-w-md text-sm leading-6 text-zinc-400">
+                  Trending posts will appear here when the community starts
+                  reacting.
+                </p>
+              </section>
             ) : (
               <NoResultsMessage
                 posts={finalPosts}
-                searchTerm=""
+                searchTerm={searchTerm}
                 selectedCategories={selectedCategories}
+                canCreate={canShowCreateButton}
+                onCreatePost={() => {
+                  preloadRoutes.dashboardCreate();
+                  navigate("/dashboard/create");
+                }}
+                onResetFilters={handleResetFilters}
               />
             )
           ) : (
@@ -297,6 +364,9 @@ const Home = () => {
                     key={post.id}
                     post={post}
                     isSaved={savedIds.has(post.id)}
+                    isSavedStatusLoading={Boolean(
+                      user?.uid && !checkedSavedPostIds.has(post.id),
+                    )}
                     onSavedChange={handleSavedChange}
                   />
                 ))}

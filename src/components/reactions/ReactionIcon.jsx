@@ -185,7 +185,7 @@ const ReactionIcon = ({
     e.stopPropagation();
 
     if (!uid) {
-      showInfoToast("Please login to react 😊", {
+      showInfoToast("Please log in to react.", {
         toastId: REACT_AUTH_TOAST_ID,
       });
       return;
@@ -253,7 +253,7 @@ const ReactionIcon = ({
     } catch (err) {
       console.error("[ReactionIcon] toggle failed:", err?.message);
 
-      showErrorToast("Something went wrong. Please try again.", {
+      showErrorToast("Reaction could not be updated. Please try again.", {
         toastId: REACT_ERROR_TOAST_ID,
       });
 

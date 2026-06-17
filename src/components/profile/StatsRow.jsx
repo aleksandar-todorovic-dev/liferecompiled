@@ -17,19 +17,18 @@ import { SkeletonLine } from "../ui/skeletonLoader/SkeletonBits";
  */
 const StatCard = ({ label, value, loading, icon: Icon }) => {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-950/20 p-4">
-      {/* Subtle highlight to keep cards from feeling flat without adding noise. */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_10%_0%,rgba(56,189,248,0.08),transparent_60%)]" />
-
-      <div className="relative flex items-start justify-between gap-3">
+    <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-[11px] font-medium text-zinc-500">{label}</div>
-          <div className="mt-2 text-2xl font-semibold text-zinc-100">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+            {label}
+          </div>
+          <div className="mt-1.5 text-xl font-semibold text-zinc-100">
             {loading ? <SkeletonLine as="span" w="w-16" h="h-6" /> : value}
           </div>
         </div>
 
-        {Icon ? <Icon className="h-5 w-5 text-zinc-600" /> : null}
+        {Icon ? <Icon className="h-4 w-4 text-zinc-600" /> : null}
       </div>
     </div>
   );
@@ -75,7 +74,7 @@ const StatsRow = ({
 
   if (variant === "cards") {
     return (
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
         <StatCard
           label="Posts"
           value={posts ?? 0}
@@ -94,16 +93,20 @@ const StatsRow = ({
 
   if (variant === "pills") {
     return (
-      <div className={`flex flex-wrap items-stretch gap-3 ${justify}`}>
-        <div className="min-w-[120px] rounded-xl border border-zinc-800 bg-zinc-950/30 px-3 py-2.5">
-          <div className="text-[11px] font-medium text-zinc-500">Posts</div>
+      <div className={`flex flex-wrap items-stretch gap-2 ${justify}`}>
+        <div className="min-w-[112px] rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+            Posts
+          </div>
           <div className="mt-1 text-lg font-semibold text-zinc-100">
             {loadingPosts ? <SkeletonLine as="span" w="w-14" h="h-5" /> : posts}
           </div>
         </div>
 
-        <div className="min-w-[120px] rounded-xl border border-zinc-800 bg-zinc-950/30 px-3 py-2.5">
-          <div className="text-[11px] font-medium text-zinc-500">Reactions</div>
+        <div className="min-w-[112px] rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+            Reactions
+          </div>
           <div className="mt-1 text-lg font-semibold text-zinc-100">
             {loadingReactions ? (
               <SkeletonLine as="span" w="w-16" h="h-5" />

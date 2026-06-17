@@ -18,6 +18,10 @@ import { DEFAULT_PROFILE_PICTURE } from "../constants/defaults";
 import { formatPostDateLabel } from "../utils/formatDate";
 
 import { FOCUS_RING, PILL_CATEGORY, PILL_TAG } from "../constants/uiClasses";
+import {
+  getRouteHoverIntentProps,
+  preloadRoutes,
+} from "../routes/routePreloaders";
 
 const CONTENT_PREVIEW_MAX = 260;
 // UX cap: keep feed cards compact and avoid noisy tag floods
@@ -58,10 +62,16 @@ const normalizeTagText = (t) => {
  * @param {Object} props
  * @param {Object} props.post - Post data used for rendering the card
  * @param {boolean} [props.isSaved] - Current saved state provided by parent list
+ * @param {boolean} [props.isSavedStatusLoading=false] - Whether saved state is still unknown.
  * @param {Function} [props.onSavedChange] - Callback(postId, nextSavedState)
  * @returns {JSX.Element}
  */
-const PostCardFeed = ({ post, isSaved, onSavedChange }) => {
+const PostCardFeed = ({
+  post,
+  isSaved,
+  isSavedStatusLoading = false,
+  onSavedChange,
+}) => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
@@ -132,6 +142,8 @@ const PostCardFeed = ({ post, isSaved, onSavedChange }) => {
   const handleSaveToggle = async (e) => {
     e.stopPropagation();
 
+    if (isSavedStatusLoading) return;
+
     // Snapshot helps SavedPosts detect stale saves after edits (title/updatedAt)
     const currentUpdated = post?.updatedAt || post?.createdAt;
 
@@ -145,18 +157,15 @@ const PostCardFeed = ({ post, isSaved, onSavedChange }) => {
   };
 
   const cardBase =
-    "relative w-full h-full overflow-hidden p-5 sm:p-4 " +
-    "rounded-2xl border border-zinc-800/70 " +
-    "bg-gradient-to-b from-sky-500/10 via-zinc-950/20 to-zinc-950/30 " +
-    "ring-1 ring-sky-200/10 shadow-sm " +
-    "flex flex-col transition-colors transition-shadow duration-200";
+    "relative flex h-full w-full flex-col overflow-hidden rounded-2xl " +
+    "border border-zinc-800 bg-zinc-950 p-4 shadow-sm";
 
   const cardInteractive = post?.locked
     ? "cursor-pointer"
-    : "cursor-pointer hover:shadow-md hover:ring-sky-200/20 hover:border-sky-300/20";
+    : "cursor-pointer hover:border-zinc-700 hover:bg-zinc-950/90";
 
   const cardLocked = post?.locked
-    ? "opacity-60 grayscale saturate-0 bg-zinc-950/80 border-zinc-800/90 ring-zinc-100/5"
+    ? "border-amber-500/20"
     : "";
 
   const cardTrending = "";
@@ -172,10 +181,11 @@ const PostCardFeed = ({ post, isSaved, onSavedChange }) => {
       <article
         className={`${cardBase} ${cardInteractive} ${cardTrending} ${cardLocked}`}
         onClick={handleCardClick}
+        {...getRouteHoverIntentProps(preloadRoutes.postDetails)}
       >
         {/* Header: author + actions */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
             <div
               className="relative shrink-0"
               onClick={(e) => e.stopPropagation()}
@@ -218,45 +228,71 @@ const PostCardFeed = ({ post, isSaved, onSavedChange }) => {
             )}
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex shrink-0 items-center gap-1">
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowInfo(true);
               }}
-              aria-label="Info"
-              className={`rounded-lg p-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-950/25 transition ${FOCUS_RING}`}
+              aria-label="Reaction info"
+              className={`rounded-lg p-2 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100 ${FOCUS_RING}`}
             >
               <FaInfoCircle className="h-4 w-4" />
             </button>
 
-            <button
-              type="button"
-              onClick={handleSaveToggle}
-              aria-disabled={!user}
-              className={`rounded-lg p-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-950/25 transition ${FOCUS_RING} ${
-                !user ? "opacity-70" : ""
-              }`}
-              title={isSaved ? "Remove from saved" : "Save this post"}
-            >
-              {isSaved ? (
-                <BsBookmarkFill className="h-4 w-4 text-sky-200" />
-              ) : (
-                <BsBookmark className="h-4 w-4" />
-              )}
-            </button>
+            {isSavedStatusLoading ? (
+              <span
+                className="inline-flex cursor-default rounded-lg p-2"
+                title="Checking saved status"
+                aria-label="Checking saved status"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="h-4 w-4 animate-pulse rounded bg-zinc-700/70" />
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSaveToggle}
+                aria-disabled={!user}
+                className={`rounded-lg p-2 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100 ${FOCUS_RING} ${
+                  !user ? "opacity-70" : ""
+                }`}
+                title={isSaved ? "Remove from saved" : "Save this post"}
+              >
+                {isSaved ? (
+                  <BsBookmarkFill className="h-4 w-4 text-sky-200" />
+                ) : (
+                  <BsBookmark className="h-4 w-4" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+          <span>Public post</span>
+          <span aria-hidden="true">•</span>
+          <span>{formatPostDateLabel(post, { compact: false })}</span>
+          {post?.locked && (
+            <>
+              <span aria-hidden="true">•</span>
+              <span className="text-amber-200">Archived</span>
+            </>
+          )}
+        </div>
+
         {/* Title + badges */}
-        <div className="mt-3 flex items-start justify-between gap-3">
-          <h2 className="text-lg font-semibold leading-snug text-zinc-100 min-w-0 line-clamp-2 min-h-[3.25rem] break-words">
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <h2 className="min-w-0 text-lg font-semibold leading-snug text-zinc-100 line-clamp-2 break-words sm:text-xl">
             {post?.title || ""}
           </h2>
 
           {badgesToShow.length > 0 ? (
-            <div className="shrink-0 flex items-center gap-1">
+            <div
+              className="flex shrink-0 flex-wrap items-center gap-1"
+              onClick={(e) => e.stopPropagation()}
+            >
               {badgesToShow.map((b) => (
                 <Badge
                   key={b.key}
@@ -268,35 +304,22 @@ const PostCardFeed = ({ post, isSaved, onSavedChange }) => {
           ) : null}
         </div>
 
-        {/* Meta: date + category */}
-        <div className="mt-2 flex items-center gap-3 min-w-0 text-xs text-zinc-400">
-          <span className="min-w-0 max-w-[7.75rem] truncate whitespace-nowrap text-[11px] sm:max-w-none sm:text-xs sm:shrink-0">
-            <span className="sm:hidden">
-              {formatPostDateLabel(post, { compact: true })}
+        {/* Category */}
+        {post?.category ? (
+          <div className="mt-3">
+            <span
+              className={`${PILL_CATEGORY} max-w-full overflow-hidden`}
+              title={post.category}
+            >
+              <span className="min-w-0 truncate">{post.category}</span>
             </span>
-            <span className="hidden sm:inline">
-              {formatPostDateLabel(post, { compact: false })}
-            </span>
-          </span>
-
-          {post?.category ? (
-            <span className="min-w-0 flex-1 flex justify-end">
-              <span
-                className={`${PILL_CATEGORY} max-w-full overflow-hidden`}
-                title={post.category}
-              >
-                <span className="min-w-0 truncate">{post.category}</span>
-              </span>
-            </span>
-          ) : (
-            <span className="flex-1" aria-hidden="true" />
-          )}
-        </div>
+          </div>
+        ) : null}
 
         {/* Preview */}
-        <div className="mt-2 min-h-[5.75rem]">
+        <div className="mt-3 min-h-[5.5rem]">
           {descText ? (
-            <p className="text-sm text-zinc-300 line-clamp-2 break-words">
+            <p className="text-sm leading-6 text-zinc-300 line-clamp-2 break-words">
               {descText}
             </p>
           ) : (
@@ -304,7 +327,7 @@ const PostCardFeed = ({ post, isSaved, onSavedChange }) => {
           )}
 
           {contentPreview ? (
-            <p className="mt-1 text-[13px] leading-relaxed text-zinc-300/90 line-clamp-2 break-words">
+            <p className="mt-2 text-[13px] leading-6 text-zinc-400 line-clamp-2 break-words">
               {contentPreview}
               {isContentTruncated ? "..." : ""}
             </p>
@@ -392,6 +415,7 @@ const PostCardFeed = ({ post, isSaved, onSavedChange }) => {
 PostCardFeed.propTypes = {
   post: PropTypes.object.isRequired,
   isSaved: PropTypes.bool,
+  isSavedStatusLoading: PropTypes.bool,
   onSavedChange: PropTypes.func,
 };
 

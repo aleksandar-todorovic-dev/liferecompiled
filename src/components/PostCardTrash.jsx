@@ -2,10 +2,6 @@ import PropTypes from "prop-types";
 import { FiLock } from "react-icons/fi";
 import { useMemo } from "react";
 
-import ShieldIcon from "./ui/ShieldIcon";
-import Avatar from "./common/Avatar";
-
-import { DEFAULT_PROFILE_PICTURE } from "../constants/defaults";
 import { formatPostDateLabel } from "../utils/formatDate";
 
 import {
@@ -77,8 +73,6 @@ const normalizeTagText = (t) => {
  * @returns {JSX.Element}
  */
 const PostCardTrash = ({ post, daysLeft, onRestore, onDeletePermanently }) => {
-  const authorName = post?.author?.name || "Unknown";
-
   // Tag rail: unique + normalized + max 5 (scroll handles overflow)
   const allTags = useMemo(() => {
     const raw = Array.isArray(post?.tags) ? post.tags : [];
@@ -108,50 +102,39 @@ const PostCardTrash = ({ post, daysLeft, onRestore, onDeletePermanently }) => {
     "shrink-0 whitespace-nowrap max-w-none overflow-visible text-clip";
 
   const cardBase =
-    "relative w-full h-full overflow-hidden p-4 " +
-    "rounded-2xl border border-zinc-800/70 " +
-    "bg-gradient-to-b from-sky-500/10 via-zinc-950/20 to-zinc-950/30 " +
-    "ring-1 ring-sky-200/10 shadow-sm " +
-    "flex flex-col transition-colors transition-shadow duration-200";
+    "relative flex h-full w-full flex-col overflow-hidden rounded-2xl " +
+    "border border-zinc-800 bg-zinc-950 p-4 shadow-sm";
 
   return (
     <article className={cardBase}>
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="relative shrink-0">
-            <Avatar
-              src={post?.author?.profilePicture || DEFAULT_PROFILE_PICTURE}
-              size={40}
-              zoomable
-              badge={post?.author?.badges?.topContributor}
-            />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center rounded-full border border-rose-500/25 bg-rose-500/10 px-2.5 py-1 text-xs font-semibold text-rose-200">
+              In Trash
+            </span>
 
-            {post?.author?.badges?.topContributor && (
+            {post?.locked && (
               <span
-                className="absolute -top-2 -right-1"
-                title="Top Contributor"
+                className={`${PILL_META} inline-flex items-center gap-1`}
+                title="Archived"
               >
-                <ShieldIcon className="w-5 h-5 text-amber-300" />
+                <FiLock className="shrink-0 text-sm" />
+                <span>Archived</span>
               </span>
             )}
           </div>
-
-          <span className="min-w-0">
-            <span className="font-semibold text-sm text-zinc-100 line-clamp-1">
-              {authorName}
-            </span>
-          </span>
         </div>
 
-        {/* Lock context: indicates the post was archived/locked (still trashed) */}
-        {post?.locked && (
+        {typeof daysLeft === "number" && (
           <span
-            className={`${PILL_META} inline-flex items-center gap-1`}
-            title="Archived"
+            className={`inline-flex max-w-max self-start whitespace-nowrap items-center rounded-full px-2.5 py-1 text-xs font-medium ${getTtlPillClasses(
+              daysLeft,
+            )}`}
           >
-            <FiLock className="text-sm shrink-0" />
-            <span>Archived</span>
+            {daysLeft === 0
+              ? "Last day to restore"
+              : `${daysLeft} day${daysLeft > 1 ? "s" : ""} left`}
           </span>
         )}
       </div>
@@ -231,51 +214,30 @@ const PostCardTrash = ({ post, daysLeft, onRestore, onDeletePermanently }) => {
           </div>
         </div>
 
-        {/* Divider: tags -> status/actions */}
-        <div className="mt-2 border-t border-zinc-800/50" />
-
-        {/* TTL restore window */}
-        {typeof daysLeft === "number" && (
-          <div className="mt-2 flex justify-start">
-            <span
-              className={`inline-flex max-w-full items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTtlPillClasses(
-                daysLeft,
-              )}`}
-            >
-              ⏳{" "}
-              {daysLeft === 0
-                ? "Last chance to restore!"
-                : `${daysLeft} day${daysLeft > 1 ? "s" : ""} left to restore`}
-            </span>
-          </div>
-        )}
-
         {/* Actions */}
-        <div className="mt-3 flex items-center justify-between gap-2">
+        <div className="mt-3 grid grid-cols-1 gap-2 border-t border-zinc-800 pt-3 sm:flex sm:items-center sm:justify-between">
           <button
             type="button"
             onClick={onRestore}
             className={
-              "rounded-lg bg-emerald-500/15 whitespace-nowrap px-3 py-1.5 " +
-              "text-xs font-semibold text-emerald-200 ring-1 ring-emerald-500/25 " +
-              "hover:bg-emerald-500/25 transition sm:px-3 sm:py-2 sm:text-sm " +
+              "ui-button justify-center bg-emerald-600 px-3 py-2 text-sm " +
+              "font-semibold text-zinc-50 hover:bg-emerald-500 " +
               FOCUS_RING
             }
           >
-            Restore
+            Restore post
           </button>
 
           <button
             type="button"
             onClick={onDeletePermanently}
             className={
-              "rounded-lg bg-rose-500/15 whitespace-nowrap px-3 py-1.5 " +
-              "text-xs font-semibold text-rose-200 ring-1 ring-rose-500/25 " +
-              "hover:bg-rose-500/25 transition sm:px-3 sm:py-2 sm:text-sm " +
+              "ui-button justify-center border border-rose-500/30 bg-rose-500/10 " +
+              "px-3 py-2 text-sm font-semibold text-rose-200 hover:bg-rose-500/15 " +
               FOCUS_RING
             }
           >
-            Delete Permanently
+            Delete permanently
           </button>
         </div>
       </div>
