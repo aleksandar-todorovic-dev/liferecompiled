@@ -189,7 +189,10 @@ const PostDetails = () => {
   const lockedDate = post?.lockedAt?.toDate?.()?.toLocaleDateString?.() ?? null;
 
   // Saved state (bookmarks)
-  const { isSaved, setIsSaved } = useCheckSavedStatus(user, post && post.id);
+  const { isSaved, setIsSaved, isSavedStatusLoading } = useCheckSavedStatus(
+    user,
+    post && post.id,
+  );
 
   // Desktop breakpoint for docked comments column
   const isLgUp = useMediaQuery("(min-width: 1024px)");
@@ -350,6 +353,8 @@ const PostDetails = () => {
    */
   const handleSaveToggle = async (e) => {
     e.stopPropagation();
+
+    if (isSavedStatusLoading) return;
 
     const currentUpdated = post.updatedAt || post.createdAt;
 
@@ -559,18 +564,31 @@ const PostDetails = () => {
 
                 {/* Right side actions: save + report */}
                 <div className="flex items-center gap-1.5 flex-none shrink-0">
-                  <button
-                    type="button"
-                    onClick={handleSaveToggle}
-                    title={isSaved ? "Remove from saved" : "Save this post"}
-                    className="rounded-xl border border-zinc-800 bg-zinc-900 p-2 text-zinc-300 hover:border-zinc-700 hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
-                  >
-                    {isSaved ? (
-                      <BsBookmarkFill className="text-sky-200" />
-                    ) : (
-                      <BsBookmark />
-                    )}
-                  </button>
+                  {isSavedStatusLoading ? (
+                    <button
+                      type="button"
+                      disabled
+                      aria-disabled="true"
+                      aria-label="Checking saved status"
+                      title="Checking saved status"
+                      className="rounded-xl border border-zinc-800 bg-zinc-900 p-2"
+                    >
+                      <span className="block h-4 w-4 animate-pulse rounded bg-zinc-700/70" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleSaveToggle}
+                      title={isSaved ? "Remove from saved" : "Save this post"}
+                      className="rounded-xl border border-zinc-800 bg-zinc-900 p-2 text-zinc-300 hover:border-zinc-700 hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                    >
+                      {isSaved ? (
+                        <BsBookmarkFill className="text-sky-200" />
+                      ) : (
+                        <BsBookmark />
+                      )}
+                    </button>
+                  )}
 
                   <button
                     type="button"

@@ -1,6 +1,6 @@
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 /**
  * @hook useCheckSavedStatus
@@ -16,28 +16,68 @@ import { useState, useEffect } from "react";
  * - This is a one-time check per dependency change (not a real-time listener).
  * - Returns `setIsSaved` to allow optimistic UI updates after save/unsave actions.
  * - Firestore read is lightweight (single document lookup).
+ * - Exposes loading/ready state so UI does not render false unsaved state
+ *   before the check resolves.
  *
  * @param {Object|null} user - Authenticated user object (must contain `uid`)
  * @param {string|null} postId - ID of the post to check
- * @returns {{ isSaved: boolean, setIsSaved: Function }}
+ * @returns {{ isSaved: boolean, setIsSaved: Function, isSavedStatusLoading: boolean, isSavedStatusReady: boolean }}
  */
 export const useCheckSavedStatus = (user, postId) => {
   const [isSaved, setIsSaved] = useState(false);
+  const [isCheckingSaved, setIsCheckingSaved] = useState(false);
+  const [checkedLookupKey, setCheckedLookupKey] = useState("");
+
+  const lookupKey = useMemo(
+    () => (user?.uid && postId ? `${user.uid}:${postId}` : ""),
+    [user?.uid, postId],
+  );
+
+  const isSavedStatusReady = !lookupKey || checkedLookupKey === lookupKey;
+  const isSavedStatusLoading = Boolean(
+    lookupKey && (isCheckingSaved || !isSavedStatusReady),
+  );
 
   useEffect(() => {
+    let canceled = false;
+
     // Guard: do not query Firestore if prerequisites are missing.
-    if (!user || !postId) return;
+    if (!user?.uid || !postId) {
+      setIsSaved(false);
+      setIsCheckingSaved(false);
+      setCheckedLookupKey("");
+      return;
+    }
 
     const checkIfSaved = async () => {
-      const ref = doc(db, "users", user.uid, "savedPosts", postId);
-      const snap = await getDoc(ref);
+      setIsCheckingSaved(true);
 
-      // Existence of the document defines saved state.
-      setIsSaved(snap.exists());
+      try {
+        const ref = doc(db, "users", user.uid, "savedPosts", postId);
+        const snap = await getDoc(ref);
+
+        if (canceled) return;
+
+        // Existence of the document defines saved state.
+        setIsSaved(snap.exists());
+        setCheckedLookupKey(lookupKey);
+      } catch (error) {
+        if (!canceled) {
+          setIsSaved(false);
+          setCheckedLookupKey(lookupKey);
+        }
+        console.error("[useCheckSavedStatus] Failed:", error);
+      } finally {
+        if (!canceled) setIsCheckingSaved(false);
+      }
     };
 
     checkIfSaved();
-  }, [user, postId]);
 
-  return { isSaved, setIsSaved };
+    return () => {
+      canceled = true;
+    };
+  }, [user?.uid, postId, lookupKey]);
+
+  return { isSaved, setIsSaved, isSavedStatusLoading, isSavedStatusReady };
 };

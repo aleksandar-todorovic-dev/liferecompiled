@@ -62,10 +62,16 @@ const normalizeTagText = (t) => {
  * @param {Object} props
  * @param {Object} props.post - Post data used for rendering the card
  * @param {boolean} [props.isSaved] - Current saved state provided by parent list
+ * @param {boolean} [props.isSavedStatusLoading=false] - Whether saved state is still unknown.
  * @param {Function} [props.onSavedChange] - Callback(postId, nextSavedState)
  * @returns {JSX.Element}
  */
-const PostCardFeed = ({ post, isSaved, onSavedChange }) => {
+const PostCardFeed = ({
+  post,
+  isSaved,
+  isSavedStatusLoading = false,
+  onSavedChange,
+}) => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
@@ -135,6 +141,8 @@ const PostCardFeed = ({ post, isSaved, onSavedChange }) => {
 
   const handleSaveToggle = async (e) => {
     e.stopPropagation();
+
+    if (isSavedStatusLoading) return;
 
     // Snapshot helps SavedPosts detect stale saves after edits (title/updatedAt)
     const currentUpdated = post?.updatedAt || post?.createdAt;
@@ -233,21 +241,32 @@ const PostCardFeed = ({ post, isSaved, onSavedChange }) => {
               <FaInfoCircle className="h-4 w-4" />
             </button>
 
-            <button
-              type="button"
-              onClick={handleSaveToggle}
-              aria-disabled={!user}
-              className={`rounded-lg p-2 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100 ${FOCUS_RING} ${
-                !user ? "opacity-70" : ""
-              }`}
-              title={isSaved ? "Remove from saved" : "Save this post"}
-            >
-              {isSaved ? (
-                <BsBookmarkFill className="h-4 w-4 text-sky-200" />
-              ) : (
-                <BsBookmark className="h-4 w-4" />
-              )}
-            </button>
+            {isSavedStatusLoading ? (
+              <span
+                className="inline-flex cursor-default rounded-lg p-2"
+                title="Checking saved status"
+                aria-label="Checking saved status"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="h-4 w-4 animate-pulse rounded bg-zinc-700/70" />
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSaveToggle}
+                aria-disabled={!user}
+                className={`rounded-lg p-2 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100 ${FOCUS_RING} ${
+                  !user ? "opacity-70" : ""
+                }`}
+                title={isSaved ? "Remove from saved" : "Save this post"}
+              >
+                {isSaved ? (
+                  <BsBookmarkFill className="h-4 w-4 text-sky-200" />
+                ) : (
+                  <BsBookmark className="h-4 w-4" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
@@ -396,6 +415,7 @@ const PostCardFeed = ({ post, isSaved, onSavedChange }) => {
 PostCardFeed.propTypes = {
   post: PropTypes.object.isRequired,
   isSaved: PropTypes.bool,
+  isSavedStatusLoading: PropTypes.bool,
   onSavedChange: PropTypes.func,
 };
 

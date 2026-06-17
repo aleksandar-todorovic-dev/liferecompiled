@@ -181,7 +181,8 @@ const Home = () => {
   // Saved-state hook expects post ids; memo avoids useless recalcs on renders.
   const postIds = useMemo(() => finalPosts.map((p) => p.id), [finalPosts]);
 
-  const { savedIds, setSavedIds } = useSavedIdsForPostIds(user?.uid, postIds);
+  const { savedIds, setSavedIds, checkedSavedPostIds } =
+    useSavedIdsForPostIds(user?.uid, postIds);
 
   const handleSavedChange = useCallback(
     (postId, nextState) => {
@@ -363,6 +364,9 @@ const Home = () => {
                     key={post.id}
                     post={post}
                     isSaved={savedIds.has(post.id)}
+                    isSavedStatusLoading={Boolean(
+                      user?.uid && !checkedSavedPostIds.has(post.id),
+                    )}
                     onSavedChange={handleSavedChange}
                   />
                 ))}
