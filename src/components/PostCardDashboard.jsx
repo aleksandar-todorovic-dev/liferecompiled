@@ -19,6 +19,11 @@ import { toggleSavePost } from "../utils/savedPostUtils";
 import { formatPostDateLabel } from "../utils/formatDate";
 
 import { FOCUS_RING, PILL_CATEGORY, PILL_TAG } from "../constants/uiClasses";
+import {
+  getRouteHoverIntentProps,
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../routes/routePreloaders";
 
 /**
  * Compute remaining edit window (7 days from creation).
@@ -185,6 +190,7 @@ const PostCardDashboard = ({
       <article
         className={`${cardBase} ${cardInteractive} ${cardLocked}`}
         onClick={handleCardClick}
+        {...getRouteHoverIntentProps(preloadRoutes.postDetails)}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -329,6 +335,7 @@ const PostCardDashboard = ({
                 {canEdit ? (
                   <Link
                     to={`/dashboard/edit/${postId}`}
+                    {...getRoutePressIntentProps(preloadRoutes.dashboardEdit)}
                     className="ui-button-primary w-full justify-center px-4 py-2 text-sm sm:w-auto"
                   >
                     Edit

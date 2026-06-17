@@ -35,6 +35,10 @@ import {
   SkeletonCircle,
   SkeletonLine,
 } from "../ui/skeletonLoader/SkeletonBits";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../../routes/routePreloaders";
 
 dayjs.extend(relativeTime);
 
@@ -462,6 +466,7 @@ const CommentItem = ({
                 ) : userId ? (
                   <Link
                     to={`/profile/${userId}`}
+                    {...getRoutePressIntentProps(preloadRoutes.profile)}
                     className={`${NAME_LINK_BASE} truncate max-w-[12rem] sm:max-w-[18rem]`}
                     onClick={(e) => e.stopPropagation()}
                     aria-label={`Open profile: ${user?.name || "author"}`}
@@ -491,6 +496,7 @@ const CommentItem = ({
                     Replying to{" "}
                     <Link
                       to={`/profile/${parentAuthor.id}`}
+                      {...getRoutePressIntentProps(preloadRoutes.profile)}
                       className="text-zinc-300 hover:text-zinc-100 hover:underline underline-offset-4 decoration-zinc-500/70"
                       onClick={(e) => e.stopPropagation()}
                       aria-label={`Open profile: ${parentAuthor?.name || "user"}`}

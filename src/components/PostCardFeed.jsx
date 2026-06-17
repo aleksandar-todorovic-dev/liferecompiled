@@ -18,6 +18,10 @@ import { DEFAULT_PROFILE_PICTURE } from "../constants/defaults";
 import { formatPostDateLabel } from "../utils/formatDate";
 
 import { FOCUS_RING, PILL_CATEGORY, PILL_TAG } from "../constants/uiClasses";
+import {
+  getRouteHoverIntentProps,
+  preloadRoutes,
+} from "../routes/routePreloaders";
 
 const CONTENT_PREVIEW_MAX = 260;
 // UX cap: keep feed cards compact and avoid noisy tag floods
@@ -169,6 +173,7 @@ const PostCardFeed = ({ post, isSaved, onSavedChange }) => {
       <article
         className={`${cardBase} ${cardInteractive} ${cardTrending} ${cardLocked}`}
         onClick={handleCardClick}
+        {...getRouteHoverIntentProps(preloadRoutes.postDetails)}
       >
         {/* Header: author + actions */}
         <div className="flex items-start justify-between gap-3">

@@ -9,6 +9,10 @@ import Avatar from "../../../components/common/Avatar";
 import { SkeletonLine } from "../../../components/ui/skeletonLoader/SkeletonBits";
 import EmptyState from "../components/EmptyState";
 import { DEFAULT_PROFILE_PICTURE } from "../../../constants/defaults";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../../../routes/routePreloaders";
 
 /**
  * @component Settings
@@ -234,7 +238,11 @@ const Settings = () => {
               </div>
 
               <div className="mt-4 pt-4 border-t border-zinc-800 flex flex-wrap gap-3">
-                <Link to="/dashboard" className={linkBase}>
+                <Link
+                  to="/dashboard"
+                  {...getRoutePressIntentProps(preloadRoutes.dashboardMyPosts)}
+                  className={linkBase}
+                >
                   Back to dashboard
                 </Link>
               </div>

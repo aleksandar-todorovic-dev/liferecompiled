@@ -3,6 +3,10 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import aboutMdRaw from "../content/about.md?raw";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../routes/routePreloaders";
 
 /**
  * Extract a simple "hero" title from markdown if the first line is `# ...`.
@@ -195,7 +199,11 @@ const About = () => {
                 Explore app
               </Link>
 
-              <Link to="/report" className="ui-button-primary text-center">
+              <Link
+                to="/report"
+                {...getRoutePressIntentProps(preloadRoutes.reportIssue)}
+                className="ui-button-primary text-center"
+              >
                 Support & feedback
               </Link>
             </div>
@@ -255,7 +263,11 @@ const About = () => {
                   context automatically.
                 </p>
 
-                <Link to="/report" className="ui-button-secondary text-center">
+                <Link
+                  to="/report"
+                  {...getRoutePressIntentProps(preloadRoutes.reportIssue)}
+                  className="ui-button-secondary text-center"
+                >
                   Open support
                 </Link>
               </div>

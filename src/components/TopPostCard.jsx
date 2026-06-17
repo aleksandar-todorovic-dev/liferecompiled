@@ -11,6 +11,10 @@ import {
   PILL_META,
   cx,
 } from "../constants/uiClasses";
+import {
+  getRouteIntentProps,
+  preloadRoutes,
+} from "../routes/routePreloaders";
 
 const MAX_TAGS_IN_APP = 5; // UI limit: keep card compact and tag rail readable (avoid noisy overflow)
 
@@ -123,6 +127,7 @@ function TopPostCard({ post }) {
       role="button"
       tabIndex={0}
       onClick={goToPost}
+      {...getRouteIntentProps(preloadRoutes.postDetails)}
       onKeyDown={(e) => {
         // Keyboard parity: card behaves like a button for accessibility.
         if (e.key === "Enter" || e.key === " ") {

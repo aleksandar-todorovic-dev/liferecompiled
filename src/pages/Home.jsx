@@ -11,6 +11,10 @@ import SearchAndFilterBar, {
 import SkeletonCard from "../components/ui/skeletonLoader/SkeletonCard";
 import NoResultsMessage from "../components/NoResultsMessage";
 import { AuthContext } from "../context/AuthContext";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../routes/routePreloaders";
 
 const PAGE_SIZE_UI = 12;
 
@@ -213,6 +217,7 @@ const Home = () => {
         type="button"
         className="ui-button-primary inline-flex h-11 w-11 items-center justify-center p-0 sm:hidden"
         aria-label="Create new post"
+        {...getRoutePressIntentProps(preloadRoutes.dashboardCreate)}
         onClick={() => navigate("/dashboard/create")}
       >
         <svg
@@ -234,6 +239,7 @@ const Home = () => {
       <button
         type="button"
         className="hidden sm:inline-flex ui-button-primary lg:hidden"
+        {...getRoutePressIntentProps(preloadRoutes.dashboardCreate)}
         onClick={() => navigate("/dashboard/create")}
       >
         Create New Post
@@ -342,7 +348,10 @@ const Home = () => {
                 searchTerm={searchTerm}
                 selectedCategories={selectedCategories}
                 canCreate={canShowCreateButton}
-                onCreatePost={() => navigate("/dashboard/create")}
+                onCreatePost={() => {
+                  preloadRoutes.dashboardCreate();
+                  navigate("/dashboard/create");
+                }}
                 onResetFilters={handleResetFilters}
               />
             )

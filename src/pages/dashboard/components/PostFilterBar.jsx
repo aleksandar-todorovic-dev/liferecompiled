@@ -3,6 +3,10 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import { AuthContext } from "../../../context/AuthContext";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../../../routes/routePreloaders";
 
 /**
  * @component IconSearch
@@ -175,6 +179,7 @@ const PostFilterBar = ({
             {canCreate && (
               <NavLink
                 to="/dashboard/create"
+                {...getRoutePressIntentProps(preloadRoutes.dashboardCreate)}
                 aria-label="Create new post"
                 title="Create new post"
                 className="ui-button-primary inline-flex h-11 w-11 items-center justify-center p-0"

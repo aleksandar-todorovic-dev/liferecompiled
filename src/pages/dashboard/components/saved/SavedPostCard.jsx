@@ -18,6 +18,10 @@ import {
   PILL_TAG,
   PILL_META,
 } from "../../../../constants/uiClasses";
+import {
+  getRouteHoverIntentProps,
+  preloadRoutes,
+} from "../../../../routes/routePreloaders";
 
 const CONTENT_PREVIEW_MAX = 300;
 const MAX_TAGS_IN_APP = 5;
@@ -185,6 +189,7 @@ const SavedPostCard = ({ post, onUnsave, isPendingUndo = false }) => {
       <article
         className={`${cardBase} ${cardInteractive}`}
         onClick={handleCardClick}
+        {...getRouteHoverIntentProps(preloadRoutes.postDetails)}
       >
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -252,6 +257,7 @@ const SavedPostCard = ({ post, onUnsave, isPendingUndo = false }) => {
       <article
         className={`${cardBase} ${cardInteractive} ${cardLocked}`}
         onClick={handleCardClick}
+        {...getRouteHoverIntentProps(preloadRoutes.postDetails)}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">

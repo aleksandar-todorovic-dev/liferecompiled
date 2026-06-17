@@ -4,6 +4,10 @@ import { Link } from "react-router-dom";
 import ModalPortal from "./ModalPortal";
 import Spinner from "../Spinner";
 import { DEFAULT_PROFILE_PICTURE } from "../../constants/defaults";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../../routes/routePreloaders";
 
 /**
  * @component LikesModal
@@ -86,6 +90,7 @@ const LikesModal = ({
                     {profileHref ? (
                       <Link
                         to={profileHref}
+                        {...getRoutePressIntentProps(preloadRoutes.profile)}
                         className={rowBase}
                         onClick={() => onClose?.()}
                         aria-label={`Open profile: ${u.name}`}

@@ -7,6 +7,10 @@ import { db } from "../firebase";
 import { DEFAULT_PROFILE_PICTURE } from "../constants/defaults";
 import ShieldIcon from "./ui/ShieldIcon";
 import Avatar from "./common/Avatar";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../routes/routePreloaders";
 
 import {
   cx,
@@ -158,6 +162,7 @@ const AvatarDropdown = ({ user, logout, isLoggingOut }) => {
               <li>
                 <NavLink
                   to="/profile"
+                  {...getRoutePressIntentProps(preloadRoutes.profile)}
                   className={cx(
                     linkBase,
                     location.pathname === "/profile" && linkActive,
@@ -171,6 +176,7 @@ const AvatarDropdown = ({ user, logout, isLoggingOut }) => {
                 <li>
                   <NavLink
                     to="/dashboard"
+                    {...getRoutePressIntentProps(preloadRoutes.dashboardMyPosts)}
                     className={cx(linkBase)}
                   >
                     Dashboard
@@ -181,6 +187,7 @@ const AvatarDropdown = ({ user, logout, isLoggingOut }) => {
               <li>
                 <NavLink
                   to="/dashboard/settings"
+                  {...getRoutePressIntentProps(preloadRoutes.dashboardSettings)}
                   className={cx(
                     linkBase,
                     location.pathname === "/dashboard/settings" && linkActive,
@@ -195,6 +202,7 @@ const AvatarDropdown = ({ user, logout, isLoggingOut }) => {
               <li>
                 <NavLink
                   to="/report"
+                  {...getRoutePressIntentProps(preloadRoutes.reportIssue)}
                   className={cx(
                     linkBase,
                     location.pathname === "/report" && linkActive,
@@ -207,6 +215,7 @@ const AvatarDropdown = ({ user, logout, isLoggingOut }) => {
               <li>
                 <NavLink
                   to="/about"
+                  {...getRoutePressIntentProps(preloadRoutes.about)}
                   className={cx(
                     linkBase,
                     location.pathname === "/about" && linkActive,

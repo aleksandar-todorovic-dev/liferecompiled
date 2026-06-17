@@ -11,28 +11,23 @@ import Spinner from "./components/Spinner";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import { routeLoaders } from "./routes/routePreloaders";
 
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
-const ReportIssue = lazy(() => import("./pages/ReportIssue"));
-const MyPosts = lazy(() => import("./pages/MyPosts"));
-const CreatePost = lazy(() => import("./pages/CreatePost"));
-const EditPost = lazy(() => import("./pages/EditPost"));
-const PostDetails = lazy(() => import("./pages/PostDetails"));
-const Profile = lazy(() => import("./pages/Profile"));
-const About = lazy(() => import("./pages/About"));
+const ForgotPassword = lazy(routeLoaders.forgotPassword);
+const ReportIssue = lazy(routeLoaders.reportIssue);
+const MyPosts = lazy(routeLoaders.myPosts);
+const CreatePost = lazy(routeLoaders.createPost);
+const EditPost = lazy(routeLoaders.editPost);
+const PostDetails = lazy(routeLoaders.postDetails);
+const Profile = lazy(routeLoaders.profile);
+const About = lazy(routeLoaders.about);
 
-const DashboardLayout = lazy(
-  () => import("./pages/dashboard/components/DashboardLayout"),
-);
-const SavedPosts = lazy(
-  () => import("./pages/dashboard/components/saved/SavedPosts"),
-);
-const Stats = lazy(() => import("./pages/dashboard/Stats"));
-const Trash = lazy(() => import("./pages/dashboard/Trash"));
-const Settings = lazy(() => import("./pages/dashboard/settings/Settings"));
-const ModerationPage = lazy(
-  () => import("./pages/dashboard/moderation/ModerationPage"),
-);
+const DashboardLayout = lazy(routeLoaders.dashboardLayout);
+const SavedPosts = lazy(routeLoaders.savedPosts);
+const Stats = lazy(routeLoaders.stats);
+const Trash = lazy(routeLoaders.trash);
+const Settings = lazy(routeLoaders.settings);
+const ModerationPage = lazy(routeLoaders.moderationPage);
 
 const routeFallback = (
   <div className="flex min-h-[45vh] items-center justify-center">

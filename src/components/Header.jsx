@@ -5,6 +5,10 @@ import { AuthContext } from "../context/AuthContext";
 import AvatarDropdown from "./AvatarDropdown";
 import BrandWordmark from "./ui/BrandWordmark";
 import { cx, FOCUS_RING } from "../constants/uiClasses";
+import {
+  getRouteIntentProps,
+  preloadRoutes,
+} from "../routes/routePreloaders";
 
 const SUPPORT_ROUTE = "/report";
 
@@ -37,6 +41,7 @@ const DashboardNav = ({ isAdmin }) => (
       <NavLink
         to="/dashboard"
         end
+        {...getRouteIntentProps(preloadRoutes.dashboardMyPosts)}
         className={({ isActive }) => getNavClass(isActive)}
       >
         My Posts
@@ -44,6 +49,7 @@ const DashboardNav = ({ isAdmin }) => (
 
       <NavLink
         to="/dashboard/saved"
+        {...getRouteIntentProps(preloadRoutes.dashboardSaved)}
         className={({ isActive }) => getNavClass(isActive)}
       >
         Saved
@@ -51,6 +57,7 @@ const DashboardNav = ({ isAdmin }) => (
 
       <NavLink
         to="/dashboard/stats"
+        {...getRouteIntentProps(preloadRoutes.dashboardStats)}
         className={({ isActive }) => getNavClass(isActive)}
       >
         Stats
@@ -58,6 +65,7 @@ const DashboardNav = ({ isAdmin }) => (
 
       <NavLink
         to="/dashboard/trash"
+        {...getRouteIntentProps(preloadRoutes.dashboardTrash)}
         className={({ isActive }) => getNavClass(isActive)}
       >
         Trash
@@ -66,6 +74,7 @@ const DashboardNav = ({ isAdmin }) => (
       {isAdmin && (
         <NavLink
           to="/dashboard/moderation"
+          {...getRouteIntentProps(preloadRoutes.dashboardModeration)}
           className={({ isActive }) => getNavClass(isActive)}
         >
           Moderation
@@ -92,6 +101,7 @@ const PublicNav = ({ showDashboard, pathname }) => (
       {showDashboard && (
         <NavLink
           to="/dashboard"
+          {...getRouteIntentProps(preloadRoutes.dashboardMyPosts)}
           className={({ isActive }) =>
             getNavClass(isActive || isDashboardPath(pathname))
           }
@@ -102,6 +112,7 @@ const PublicNav = ({ showDashboard, pathname }) => (
 
       <NavLink
         to="/about"
+        {...getRouteIntentProps(preloadRoutes.about)}
         className={({ isActive }) => getNavClass(isActive)}
       >
         About
@@ -109,6 +120,7 @@ const PublicNav = ({ showDashboard, pathname }) => (
 
       <NavLink
         to={SUPPORT_ROUTE}
+        {...getRouteIntentProps(preloadRoutes.reportIssue)}
         className={({ isActive }) => getNavClass(isActive)}
       >
         Support
@@ -155,6 +167,7 @@ const Header = () => {
   const createPostLink = showCreatePost ? (
     <NavLink
       to="/dashboard/create"
+      {...getRouteIntentProps(preloadRoutes.dashboardCreate)}
       className="ui-button-primary hidden whitespace-nowrap px-3 py-2 text-sm lg:inline-flex"
     >
       Create post

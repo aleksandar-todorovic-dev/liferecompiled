@@ -1,5 +1,9 @@
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../routes/routePreloaders";
 
 /**
  * @component AuthorLink
@@ -30,6 +34,7 @@ const AuthorLink = ({ author, children, className = "" }) => {
   return (
     <Link
       to={`/profile/${author.id}`}
+      {...getRoutePressIntentProps(preloadRoutes.profile)}
       className={`${base} ${className}`}
       // Prevent navigation conflicts when used inside clickable parent cards
       onClick={(e) => e.stopPropagation()}

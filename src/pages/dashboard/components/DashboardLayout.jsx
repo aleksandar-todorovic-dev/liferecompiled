@@ -8,6 +8,10 @@ import { AuthContext } from "../../../context/AuthContext";
 import DashboardTabs from "./DashboardTabs";
 import TrashFilterBar from "./TrashFilterBar";
 import PostFilterBar from "./PostFilterBar";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../../../routes/routePreloaders";
 
 const DashboardChildFallback = () => (
   <section
@@ -117,6 +121,7 @@ const DashboardLayout = () => {
   const createButton = isMyPostsPage ? (
     <NavLink
       to="/dashboard/create"
+      {...getRoutePressIntentProps(preloadRoutes.dashboardCreate)}
       className="ui-button-primary whitespace-nowrap px-3 py-2 text-sm"
     >
       Create post

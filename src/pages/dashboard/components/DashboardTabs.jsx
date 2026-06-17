@@ -2,6 +2,10 @@ import { NavLink } from "react-router-dom";
 import PropTypes from "prop-types";
 
 import { FOCUS_RING } from "../../../constants/uiClasses";
+import {
+  getRoutePressIntentProps,
+  preloadRoutes,
+} from "../../../routes/routePreloaders";
 
 /**
  * @component DashboardTabs
@@ -42,6 +46,7 @@ const DashboardTabs = ({ trashCount = 0, isAdmin = false }) => {
         <NavLink
           to="/dashboard"
           end
+          {...getRoutePressIntentProps(preloadRoutes.dashboardMyPosts)}
           className={({ isActive }) =>
             `${tabBase} ${isActive ? tabActive : ""}`
           }
@@ -51,6 +56,7 @@ const DashboardTabs = ({ trashCount = 0, isAdmin = false }) => {
 
         <NavLink
           to="/dashboard/saved"
+          {...getRoutePressIntentProps(preloadRoutes.dashboardSaved)}
           className={({ isActive }) =>
             `${tabBase} ${isActive ? tabActive : ""}`
           }
@@ -60,6 +66,7 @@ const DashboardTabs = ({ trashCount = 0, isAdmin = false }) => {
 
         <NavLink
           to="/dashboard/stats"
+          {...getRoutePressIntentProps(preloadRoutes.dashboardStats)}
           className={({ isActive }) =>
             `${tabBase} ${isActive ? tabActive : ""}`
           }
@@ -69,6 +76,7 @@ const DashboardTabs = ({ trashCount = 0, isAdmin = false }) => {
 
         <NavLink
           to="/dashboard/trash"
+          {...getRoutePressIntentProps(preloadRoutes.dashboardTrash)}
           className={({ isActive }) =>
             `${tabBase} ${isActive ? tabActive : ""}`
           }
@@ -83,6 +91,7 @@ const DashboardTabs = ({ trashCount = 0, isAdmin = false }) => {
         {isAdmin && (
           <NavLink
             to="/dashboard/moderation"
+            {...getRoutePressIntentProps(preloadRoutes.dashboardModeration)}
             className={({ isActive }) =>
               `${tabBase} ${isActive ? tabActive : ""}`
             }
