@@ -2,7 +2,7 @@
 
 **LifeRecompiled** is a production-style **React/Firebase engineering case study** built around a community/blog app surface.
 
-It started as a simple blog app and evolved into a full-stack study project focused on practical Firebase architecture, authentication, Firestore data modeling, Cloud Functions, security rules, resilient UI flows, and real-world edge cases.
+It started as a simple blog app and evolved into a React/Firebase engineering case study focused on practical Firebase architecture, authentication, Firestore data modeling, Cloud Functions, security rules, resilient UI flows, and real-world edge cases.
 
 The goal of the project is not to present a social network or startup product with user traction. The community/blog surface exists so the app can demonstrate realistic product flows while the main value is the engineering work behind them.
 
@@ -84,7 +84,7 @@ LifeRecompiled demonstrates:
 
 ## Why this project exists
 
-LifeRecompiled was built as a long-form learning and portfolio project.
+LifeRecompiled was built as a production-style React/Firebase engineering case study.
 
 The app uses a familiar community/blog product surface, but the project is mainly an engineering case study. It was built to explore and practice:
 
@@ -825,4 +825,4 @@ Future ideas should be treated as future improvements, not current features.
 
 Created by **Aleksandar Todorović**.
 
-This project is part of a portfolio focused on React, Firebase, product-quality frontend work, and production-style full-stack engineering practice.
+This project is part of a portfolio focused on React, Firebase, product-quality frontend work, and practical Firebase-backed application architecture.
