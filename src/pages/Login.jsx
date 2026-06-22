@@ -11,6 +11,7 @@ import {
 } from "../utils/toastUtils";
 import { useState, useEffect } from "react";
 import Spinner from "../components/Spinner";
+import { getEmailVerificationActionSettings } from "../utils/authActionSettings";
 
 /**
  * @helper withTimeout
@@ -138,7 +139,7 @@ const Login = () => {
         setVerifyRequired(true);
 
         showInfoToast(
-          "Please verify your email before logging in. Check your inbox.",
+          "Please verify your email before logging in. Check your inbox or spam folder.",
           {
             toastId: "login-verify-required",
             autoClose: 3500,
@@ -206,10 +207,13 @@ const Login = () => {
         return;
       }
 
-      await sendEmailVerification(cred.user);
+      await sendEmailVerification(
+        cred.user,
+        getEmailVerificationActionSettings(),
+      );
 
       showSuccessToast(
-        "Verification email sent again. Please check your inbox.",
+        "Verification email sent again. Please check your inbox or spam folder.",
         {
           toastId: "verify-resent",
           autoClose: 3000,
@@ -333,8 +337,8 @@ const Login = () => {
             <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-zinc-100">
               <p className="font-semibold">Verify your email</p>
               <p className="mt-1 text-zinc-200/90">
-                We sent a verification email to your inbox. Please verify your
-                email and then log in again.
+                We sent a verification email to your inbox or spam folder.
+                Please verify your email and then log in again.
               </p>
 
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">

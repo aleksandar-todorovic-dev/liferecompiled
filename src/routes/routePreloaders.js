@@ -17,6 +17,7 @@ const isFinePointerIntent = (event) => {
 };
 
 export const routeLoaders = {
+  authAction: () => import("../pages/AuthAction"),
   forgotPassword: () => import("../pages/ForgotPassword"),
   reportIssue: () => import("../pages/ReportIssue"),
   myPosts: () => import("../pages/MyPosts"),
@@ -35,6 +36,7 @@ export const routeLoaders = {
 };
 
 export const preloadRoutes = {
+  authAction: () => runRoutePreload(routeLoaders.authAction),
   forgotPassword: () => runRoutePreload(routeLoaders.forgotPassword),
   reportIssue: () => runRoutePreload(routeLoaders.reportIssue),
   postDetails: () => runRoutePreload(routeLoaders.postDetails),

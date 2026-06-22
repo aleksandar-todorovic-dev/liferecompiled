@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { routeLoaders } from "./routes/routePreloaders";
 
+const AuthAction = lazy(routeLoaders.authAction);
 const ForgotPassword = lazy(routeLoaders.forgotPassword);
 const ReportIssue = lazy(routeLoaders.reportIssue);
 const MyPosts = lazy(routeLoaders.myPosts);
@@ -68,6 +69,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/auth/action" element={<AuthAction />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/post/:postId" element={<PostDetails />} />
           <Route path="/about" element={<About />} />

@@ -4,6 +4,7 @@ import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../firebase";
 import { showErrorToast, showInfoToast } from "../utils/toastUtils";
 import Spinner from "../components/Spinner";
+import { getPasswordResetActionSettings } from "../utils/authActionSettings";
 
 /**
  * @component ForgotPassword
@@ -57,18 +58,22 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(
+        auth,
+        email,
+        getPasswordResetActionSettings(),
+      );
 
       // Neutral message to avoid account existence leaks.
       showInfoToast(
-        "If an account exists for this email, we sent password reset instructions.",
+        "If an account exists for this email, we sent password reset instructions. Please check your inbox or spam folder.",
         { toastId: "reset-sent", autoClose: 3500 },
       );
     } catch (err) {
       // Keep neutral for user-not-found and similar existence signals.
       if (err?.code === "auth/user-not-found") {
         showInfoToast(
-          "If an account exists for this email, we sent password reset instructions.",
+          "If an account exists for this email, we sent password reset instructions. Please check your inbox or spam folder.",
           { toastId: "reset-sent", autoClose: 3500 },
         );
       } else if (err?.code === "auth/network-request-failed") {

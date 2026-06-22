@@ -14,6 +14,7 @@ import {
 } from "../utils/toastUtils";
 import Spinner from "../components/Spinner";
 import { DEFAULT_PROFILE_PICTURE } from "../constants/defaults";
+import { getEmailVerificationActionSettings } from "../utils/authActionSettings";
 
 const SUPPRESS_VERIFY_TOAST_KEY = "lr_suppress_verify_toast_once";
 
@@ -155,10 +156,10 @@ const Register = () => {
       });
 
       // 2) Start verification email (do NOT await).
-      sendEmailVerification(user)
+      sendEmailVerification(user, getEmailVerificationActionSettings())
         .then(() => {
           showSuccessToast(
-            "Account created! Verification email sent. Please verify and then log in.",
+            "Account created! Verification email sent. Please check your inbox or spam folder, then verify and log in.",
             { toastId: "register-verification-sent", autoClose: 3500 },
           );
         })
